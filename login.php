@@ -11,8 +11,6 @@ dbLogin();
 $chal = getChal(getPeer());
 dbAddChal($chal);
 
-//$realm = $_SERVER['SERVER_NAME'];
-//header('WWW-Authenticate: HOBA: challenge=' . $chal . ",expires=" . $chalTimeout . ",realm=" . $realm);
 header('WWW-Authenticate: HOBA: challenge=' . $chal . ",expires=" . $chalTimeout);
 header('HTTP/1.0 401 Unauthorized');
 

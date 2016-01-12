@@ -10,7 +10,5 @@ while(! dbAddChal($chal)){
 }
 dbLogout();
 
-//$realm = $_SERVER['SERVER_NAME'];
-//header('WWW-Authenticate: HOBA: challenge=' . $chal . ",expires=" . $chalTimeout . ",realm=" . $realm);
 header('WWW-Authenticate: HOBA: challenge=' . $chal . ",expires=" . $GLOBALS['chalTimeout']);
 ?>

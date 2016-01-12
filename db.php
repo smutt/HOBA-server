@@ -37,21 +37,28 @@ function dbAddChal($chal){
   if(dbCheckChal($chal)) return False;
   $ts = time();
   if( !$GLOBALS['db']->query("INSERT into challenges(challenge, tStamp) values('" . $chal . "','" . $ts . "')")) return False;
+  else{
+    return True;
+  }
 }
 
 // @brief Deletes a challenge from the DB if it exists
 // @return False on failure 
 function dbDelChal($chal){
   if( !$GLOBALS['db']->query("DELETE from challenges where challenge='" . $chal . "'")) return False;
+  else{
+    return True;
+  }
 }
 
 // @brief Returns True if passed challenge exists and is still fresh
 // @return False if challenge not found or if spoiled or on failure
 function dbCheckChal($chal){
   $spoiled = time() - $GLOBALS['chalTimeout'];
-  if( !$GLOBALS['db']->query("SELECT challenge from challenges where challenge='" . $chal . "' and tStamp > " . $spoiled)) return False;
+  $q = "SELECT challenge from challenges where challenge='" . $chal . "' and tStamp > " . $spoiled;
+  if( !$prep = $GLOBALS['db']->prepare($q)) return False;
 
-  if($GLOBALS['db']->num_rows > 0) return True;
+  if($prep->num_rows > 0) return True;
   else{
     return False;
   }
