@@ -6,9 +6,10 @@ include_once 'db.php';
 dbLogin();
 $did = $_POST["did"];
 $didType = $_POST["didtype"];
-$kid = $_POST["kid"];
 $kidType = $_POST["kidtype"];
-$pub = $_POST["pub"];
+$kid = base64_decode(urldecode($_POST["kid"]));
+$pub = base64_decode(urldecode($_POST["pub"]));
+
 
 $postData = "did:" . $did . " didType:" . $didType . " kid:" . $kid . " kidType:" . $kidType . " pub:" . $pub;
 
