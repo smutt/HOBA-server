@@ -17,6 +17,6 @@
 
 global $db; $db = Null; // Our global database connection instance
 global $chalTimeout; $chalTimeout = 200; // How many seconds are our challenges valid?
-
+global $sig_replay_width; $sig_replay_width = $chalTimeout * 2; // This is used in challenge.php:checkChal()
 ?>
 

@@ -61,7 +61,7 @@ function checkChal($challenge,$from)
 {
 	/// todo make challenge encryption better
 	/// the master secret for challenge encryption
-	$master="9823423khjfsdids8ufds808r98320r980fd980dsf8ds0f";
+	$master="9823423khjfsdids8ufds808r98320r980fd980dsf8ds0f"; 
 	$method='aes-128-cbc';
 	$iv="afdsfdsdsd123233";
 	$plain=openssl_decrypt($challenge,$method,$master,0,$iv);
