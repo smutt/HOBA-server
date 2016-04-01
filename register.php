@@ -44,6 +44,10 @@ function jwkToPem($jwk){
   return str_replace("\r", "", $rsa->getPublicKey()); // This shit is written for DOS
 }
 
+////////////////////
+// BEGIN EXECUTION
+////////////////////
+
 dbLogin();
 $did = $_POST["did"];
 $didType = $_POST["didtype"];
@@ -53,12 +57,16 @@ $kid = base64url_decode($_POST["kid"]);
 $pub = base64url_decode($_POST["pub"]);
 $pubKey = array();
 $pubKey = json_decode($pub, true);
-if($pubKey['kty'] != "RSA" || $pubKey['alg'] != "RS256" ){
-  error_log("Unsupported algorithm for public key");
-}
-error_log("STARTING NEW RUN");
+
+
+error_log("STARTING NEW REGISTRATION");
 //$postData = "did:" . $did . " didType:" . $didType . " alg:" . $alg . " kid:" . $kid . " kidType:" . $kidType . " pub:" . $pub;
 //error_log("postData:" . $postData);
+if($pubKey['kty'] != "RSA" || $pubKey['alg'] != "RS256" ){
+  error_log("Unsupported algorithm for public key");
+  exit(1);
+}
+// TODO: Check to make sure kid === RSA256(pubKey)
 
 foreach (getallheaders() as $name => $value){
   //error_log("Header:" . $name . " " . $value);
@@ -71,6 +79,7 @@ foreach (getallheaders() as $name => $value){
 
     if($kid != base64url_decode($kidB64)){
       error_log("kid in POST different from kid in Auth Header");
+      exit(1);
     }
   }
 }
@@ -87,7 +96,20 @@ $sigText = genTbsBlob($nonceB64, $alg, $tbsOrigin, $kidB64, $chalB64);
 //error_log("sigText:" . $sigText);
 $pem = jwkToPem($pubKey);
 $verified = openssl_verify($sigText, $sig, $pem, OPENSSL_ALGO_SHA256);
-error_log("verified:" . $verified);
 
+if($verified){
+  $newUser = dbRegisterKey($kid, $pubKey, $did);
+  if(! $newUser){
+    error_log("Register failed: Verification passed but kid already registered to did");
+    exit(1);
+  }
+  $chocolate = getCookieVal($kid);
+  dbAddSession($kid, $did, $chocolate);
+  setcookie("HOBA", $chocolate, time() + $GLOBALS['sessionTimeout'], "/hoba/", $_SERVER['SERVER_NAME'], true, false);
+  header("Hobareg: regok", true, 200);
+}else{
+  error_log("Register failed: Verification failure");
+  exit(1);
+}
 dbLogout();
 ?>

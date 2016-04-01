@@ -23,7 +23,7 @@
 
 /// @brief figure out peer to challenge
 /// @return is the peer's IP as seen by server
-function getPeer() {
+function getPeer(){
     if (!empty($_SERVER['HTTP_CLIENT_IP'])) {
       $ip=$_SERVER['HTTP_CLIENT_IP'];
     } elseif (!empty($_SERVER['HTTP_FORWARDED_FOR'])) {
@@ -39,7 +39,7 @@ function getPeer() {
 /// @brief get a new challenge
 /// @param to is the source to whom we'll give the challenge
 /// @return the challenge string
-function getChal($to) {
+function getChal($to){
 	/// @todo make challenge encryption better
 	/// the master secret for challenge encryption
 	$master="9823423khjfsdids8ufds808r98320r980fd980dsf8ds0f";
@@ -56,7 +56,7 @@ function getChal($to) {
 /// @brief check that a challenge is ok and recent enough
 /// @param challenge is the challenge
 /// @param from is the source that presented that
-/// @return true if ok, false otherwise 
+/// @return true if ok, false otherwise
 function checkChal($challenge,$from)
 {
 	/// todo make challenge encryption better
@@ -82,7 +82,22 @@ function checkChal($challenge,$from)
 	return true;
 }
 
-function test() {
+// Generates a value for our session cookie
+function getCookieVal(){
+  return crypt(getPeer(), $GLOBALS['cookieSalt']);
+}
+
+// Checks the value of a session cookie
+// Returns true on success, false on failure
+function checkCookieVal($val){
+  if(getCookieVal() === $val){
+    return true;
+  }else{
+    return false;
+  }
+}
+
+function test(){
 	$peer="10.0.0.1";
 	$otherpeer="10.0.0.2";
 	$foo=getChal($peer);

@@ -18,6 +18,8 @@
 
 include_once 'globals.php';
 
+global $db; $db = Null; // Our database connection
+
 // @brief login to our DB, sets our db object
 // @return False on failure
 function dbLogin(){
@@ -63,4 +65,52 @@ function dbCheckChal($chal){
     return False;
   }
 }
+
+// @brief Registers a new public key to a did
+// @return true if new kid/did combo, otherwise returns false
+function dbRegisterKey($kid, $pubKey, $dName){
+  $pubKey = serialize($pubKey);
+  $dName = mysql_real_escape_string($dName);
+
+  $GLOBALS['db']->query("SELECT uid from pubKeys WHERE kid='" . $kid . "'");
+  if($GLOBALS['db']->num_rows == 0){ // Do we know this key?
+    $GLOBALS['db']->query("INSERT into users");
+    $uid = $GLOBALS['db']->insert_id;
+
+    $GLOBALS['db']->query("INSERT into pubKeys(uid, kid, pubKey) values(" . $uid . "'" . $kid . "', '" . $pubKey . "')");
+    $GLOBALS['db']->query("INSERT into devices(uid, dName) values(" . $uid . ", '" . $dName . "')");
+  }else{ // If we know the key add the device
+    $r = $GLOBALS['db']->fetch_assoc();
+    $GLOBALS['db']->query("SELECT did from devices WHERE uid=" . $r['uid'] . " AND dName='" . $dName . "'");
+    if($GLOBALS['db']->num_rows == 0){
+      $GLOBALS['db']->query("INSERT into devices(uid, dName) values(" . $r['uid'] . ", '" . $dName . "')");
+    }else{
+      return False; // kid/did combo already exists
+    }
+  }
+  return True;
+}
+
+// @brief Adds new cookie value to a did, which is basically a session
+// @return nothing
+function dbAddSession($kid, $dName, $cookieVal){
+  $dName = mysql_real_escape_string($dName);
+
+  $GLOBALS['db']->query("SELECT uid from pubKeys WHERE kid='" . $kid . "'");
+  $r = $GLOBALS['db']->fetch_assoc();
+  
+  $GLOBALS['db']->query("SELECT did from devices WHERE uid=" . $r['uid'] . " AND dName='" . $dName . "'");
+  $r = $GLOBALS['db']->fetch_assoc();
+  
+  $tStamp = time();
+  $GLOBALS['db']->query("INSERT into sessions(did, cookie, tStamp) values(" . $r['did'] . ", '" . $cookieVal . "', " . $tStamp);
+}
+
+// @brief checks if a session exists and is still valid
+// @return returns assoc array(kid, did) if exists and valid, otherwise false
+function dbCheckSession($cookieVal){
+  $GLOBALS['db']->query("SELECT * from sessions WHERE cookie='" . $cookieVal . "'");
+
+}
+
 ?>
