@@ -16,9 +16,15 @@
  *
  */
 
-include_once 'globals.php';
+// Because of PHP's stupid love affair with everything object oriented
+// The sheer amount of lines we have to write to do simple things has increased by an absurd amount
+// The PHP team is responsible for the absurd amount of boilerplate nonsense polluting this file
+// They're also responsible for taking something that used to be relatively simple and making it completely obtuse
+// Let us pray the scourge of object oriented programming does not ruin PHP any further
+// I've been writing PHP since PHP3 and I think I might just use Python for my next project if it requires a DB interface
+// Seriously guys, WTF were you thinking?
 
-global $db; $db = Null; // Our database connection
+include_once 'globals.php';
 
 // @brief login to our DB, sets our db object
 // @return False on failure
@@ -67,24 +73,40 @@ function dbCheckChal($chal){
 }
 
 // @brief Registers a new public key to a did
+// Takes keyID, JWK as array, and a deviceName
 // @return true if new kid/did combo, otherwise returns false
 function dbRegisterKey($kid, $pubKey, $dName){
-  $pubKey = serialize($pubKey);
-  $dName = mysql_real_escape_string($dName);
+  $pubKey = trim(base64url_encode(json_encode($pubKey)));
+  
+  $dName = trim($GLOBALS['db']->real_escape_string($dName));
+  $q = $GLOBALS['db']->query("SELECT uid from pubKeys WHERE kid='" . $kid . "'");
+  if($q->num_rows == 0){ // Do we know this key?
+    $q->close();
 
-  $GLOBALS['db']->query("SELECT uid from pubKeys WHERE kid='" . $kid . "'");
-  if($GLOBALS['db']->num_rows == 0){ // Do we know this key?
-    $GLOBALS['db']->query("INSERT into users");
-    $uid = $GLOBALS['db']->insert_id;
+    $q = $GLOBALS['db']->prepare("INSERT into users(userNames) values(NULL)");
+    $q->execute();
+    $uid = $q->insert_id;
+    $q->close();
 
-    $GLOBALS['db']->query("INSERT into pubKeys(uid, kid, pubKey) values(" . $uid . "'" . $kid . "', '" . $pubKey . "')");
-    $GLOBALS['db']->query("INSERT into devices(uid, dName) values(" . $uid . ", '" . $dName . "')");
+    $q = $GLOBALS['db']->prepare("INSERT into pubKeys(uid, kid, pubKey) values(" . $uid . ", '" . $kid . "', '" . $pubKey . "')");
+    $q->execute();
+    $q->close();
+
+    $q = $GLOBALS['db']->prepare("INSERT into devices(uid, dName) values(" . $uid . ", '" . $dName . "')");
+    $q->execute();
+    $q->close();
   }else{ // If we know the key add the device
-    $r = $GLOBALS['db']->fetch_assoc();
-    $GLOBALS['db']->query("SELECT did from devices WHERE uid=" . $r['uid'] . " AND dName='" . $dName . "'");
-    if($GLOBALS['db']->num_rows == 0){
-      $GLOBALS['db']->query("INSERT into devices(uid, dName) values(" . $r['uid'] . ", '" . $dName . "')");
+    $r = $q->fetch_assoc();
+    $q->close();
+
+    $q = $GLOBALS['db']->query("SELECT did from devices WHERE uid=" . $r['uid'] . " AND dName='" . $dName . "'");
+    if($q->num_rows == 0){
+      $q->close();
+
+      $q = $GLOBALS['db']->query("INSERT into devices(uid, dName) values(" . $r['uid'] . ", '" . $dName . "')");
+      $q->close();
     }else{
+      $q->close();
       return False; // kid/did combo already exists
     }
   }
@@ -94,23 +116,44 @@ function dbRegisterKey($kid, $pubKey, $dName){
 // @brief Adds new cookie value to a did, which is basically a session
 // @return nothing
 function dbAddSession($kid, $dName, $cookieVal){
-  $dName = mysql_real_escape_string($dName);
+  $dName = trim($GLOBALS['db']->real_escape_string($dName));
+  $cookieVal = trim($cookieVal);
 
-  $GLOBALS['db']->query("SELECT uid from pubKeys WHERE kid='" . $kid . "'");
-  $r = $GLOBALS['db']->fetch_assoc();
-  
-  $GLOBALS['db']->query("SELECT did from devices WHERE uid=" . $r['uid'] . " AND dName='" . $dName . "'");
-  $r = $GLOBALS['db']->fetch_assoc();
+  $q = $GLOBALS['db']->query("SELECT uid from pubKeys WHERE kid='" . $kid . "'");
+  $r = $q->fetch_assoc();
+  $q->close();
+        
+  $q = $GLOBALS['db']->query("SELECT did from devices WHERE uid=" . $r['uid'] . " AND dName='" . $dName . "'");
+  $r = $q->fetch_assoc();
+  $q->close();
   
   $tStamp = time();
-  $GLOBALS['db']->query("INSERT into sessions(did, cookie, tStamp) values(" . $r['did'] . ", '" . $cookieVal . "', " . $tStamp);
+  $q = $GLOBALS['db']->prepare("INSERT into sessions(did, cookie, tStamp) values(" . $r['did'] . ", '" . $cookieVal . "', " . $tStamp . ")");
+  $q->execute();
+  $q->close();
 }
 
-// @brief checks if a session exists and is still valid
-// @return returns assoc array(kid, did) if exists and valid, otherwise false
-function dbCheckSession($cookieVal){
-  $GLOBALS['db']->query("SELECT * from sessions WHERE cookie='" . $cookieVal . "'");
-
+// @brief Takes a cookie value
+// @return true if value is valid and not expired, false otherwise
+function dbCheckCookie($cookieVal){
+  $cookieVal = trim($cookieVal);
+  $tStamp = time();
+  
+  $q = $GLOBALS['db']->query("SELECT * from sessions where cookie='" . $cookieVal . "'");
+  if($q->num_rows == 0){
+    $q->close();
+    return False;
+  }else{
+    $r = $q->fetch_assoc();
+    $q->close();
+    if($tStamp > $r['tStamp'] + $GLOBALS['sessionTimeout']){
+      return False;
+    }else{
+      return True;
+    }
+  }
 }
+
+
 
 ?>

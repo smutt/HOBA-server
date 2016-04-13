@@ -10,44 +10,6 @@ if(strlen($_SERVER['HTTPS']) == 0){
   exit(1);
 }
 
-// These 2 functions taken from http://php.net/manual/en/function.base64-encode.php
-function base64url_encode($data) {
-  return rtrim(strtr(base64_encode($data), '+/', '-_'), '=');
-}
-function base64url_decode($data) {
-  return base64_decode(str_pad(strtr($data, '-_', '+/'), strlen($data) % 4, '=', STR_PAD_RIGHT));
-}
-
-function genTbsBlobField($str){
-  $len = strlen($str);
-  return $len . ":" . $str;
-}
-
-function genTbsBlob($nonceB64, $alg, $origin, $kidB64, $chalB64){
-  $tbsStr = genTbsBlobField($nonceB64);
-  $tbsStr .= genTbsBlobField($alg);
-  $tbsStr .= genTbsBlobField($origin);
-  $tbsStr .= genTbsBlobField($GLOBALS['realm']);
-  $tbsStr .= genTbsBlobField($kidB64);
-  $tbsStr .= genTbsBlobField($chalB64);
-  return $tbsStr;
-}
-
-// Takes a JWK and returns a PEM
-// Magic taken from here http://stackoverflow.com/questions/16993838/openssl-how-can-i-get-public-key-from-modulus
-function jwkToPem($jwk){
-  $modulus = new Math_BigInteger(base64url_decode($jwk['n']), 256);
-  $exponent = new Math_BigInteger(base64_decode($jwk['e']), 256);
-  $rsa = new Crypt_RSA();
-  $rsa->loadKey(array('n' => $modulus, 'e' => $exponent));
-  $rsa->setPublicKey();
-  return str_replace("\r", "", $rsa->getPublicKey()); // This shit is written for DOS
-}
-
-////////////////////
-// BEGIN EXECUTION
-////////////////////
-
 dbLogin();
 $did = $_POST["did"];
 $didType = $_POST["didtype"];
@@ -58,8 +20,7 @@ $pub = base64url_decode($_POST["pub"]);
 $pubKey = array();
 $pubKey = json_decode($pub, true);
 
-
-error_log("STARTING NEW REGISTRATION");
+error_log("HOBA: Starting New Registration");
 //$postData = "did:" . $did . " didType:" . $didType . " alg:" . $alg . " kid:" . $kid . " kidType:" . $kidType . " pub:" . $pub;
 //error_log("postData:" . $postData);
 if($pubKey['kty'] != "RSA" || $pubKey['alg'] != "RS256" ){
@@ -86,9 +47,9 @@ foreach (getallheaders() as $name => $value){
 //error_log("kidB64:" . $kidB64 . " chalB64:" . $chalB64 . " nonceB64:" . $nonceB64 ." sig:" . $sig);
 
 if(checkChal($chalB64, getPeer())){
-  error_log("HOBA Challenge accepted");
+  error_log("HOBA: Challenge accepted");
 }else{
-  error_log("HOBA Challenge failed");
+  error_log("HOBA: Challenge failed");
 }
 
 $tbsOrigin = "https://" . $_SERVER['SERVER_NAME'] . ":" . $_SERVER['SERVER_PORT'];
@@ -98,17 +59,19 @@ $pem = jwkToPem($pubKey);
 $verified = openssl_verify($sigText, $sig, $pem, OPENSSL_ALGO_SHA256);
 
 if($verified){
+  error_log("HOBA: Key Verification Successful");
   $newUser = dbRegisterKey($kid, $pubKey, $did);
   if(! $newUser){
-    error_log("Register failed: Verification passed but kid already registered to did");
+    error_log("HOBA: Register failed, verification passed but kid already registered to did");
     exit(1);
   }
-  $chocolate = getCookieVal($kid);
+  $chocolate = getCookieVal($kid, $did);
   dbAddSession($kid, $did, $chocolate);
   setcookie("HOBA", $chocolate, time() + $GLOBALS['sessionTimeout'], "/hoba/", $_SERVER['SERVER_NAME'], true, false);
   header("Hobareg: regok", true, 200);
+  error_log("HOBA: Registration Successful");
 }else{
-  error_log("Register failed: Verification failure");
+  error_log("HOBA: Register failed, Verification failure");
   exit(1);
 }
 dbLogout();
