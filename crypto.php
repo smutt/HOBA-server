@@ -20,7 +20,6 @@
  *
  */
 
-
 /// @brief figure out peer to challenge
 /// @return is the peer's IP as seen by server
 function getPeer(){

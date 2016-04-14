@@ -2,7 +2,7 @@
 
 include_once 'globals.php';
 include_once 'db.php';
-include_once 'challenge.php';
+include_once 'crypto.php';
 
 // Prints our HTML refresher, sends HOBA headers, then exits
 function printRefresher(){
@@ -30,7 +30,7 @@ dbLogin();
 
 // Test for cookie
 if(isset($_COOKIE['HOBA'])){
-  if(dbCheckCookie($_COOKIE['HOBA'])){
+  if(dbGetDeviceByCookie($_COOKIE['HOBA'])){
     print "Your cookie is valid. Welcome to HOBA land.";
   }else{
     printRefresher();

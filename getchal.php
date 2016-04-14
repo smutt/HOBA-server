@@ -1,6 +1,6 @@
 <?php
 include_once 'globals.php';
-include_once 'challenge.php';
+include_once 'crypto.php';
 
 /* We no longer both with the DB for challenges
 include_once 'db.php';

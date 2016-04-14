@@ -1,6 +1,6 @@
 CREATE TABLE `users` (
   `uid` int(11) NOT NULL AUTO_INCREMENT,
-  `userNames` text,
+  `uName` text,
   UNIQUE KEY `uid` (`uid`)
 );
 
@@ -13,7 +13,7 @@ CREATE TABLE `devices` (
 
 CREATE TABLE `pubKeys` (
   `pid` int(11) NOT NULL AUTO_INCREMENT,
-  `uid` int(11) NOT NULL,
+  `did` int(11) NOT NULL,
   `kid` varchar(512) NOT NULL,
   `pubKey` text NOT NULL,
   UNIQUE KEY `pid` (`pid`)
