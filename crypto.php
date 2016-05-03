@@ -1,14 +1,29 @@
 <?php
 
 /*
- * @file challenge.php
- * @brief PHP HOBA scripts challenge handler
- * This script implements challenge handling
+  The file is part of the HOBA server.
+  
+  HOBA server is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+  
+  HOBA server is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program. If not, see <http://www.gnu.org/licenses/>.
+  Copyright (C) 2016, Andrew McConachie, <andrew@depht.com>
+*/
+
+/*
+ * This file implements challenge handling
  * Challenges are encrypted values with the plaintext
  * being the time and IP address to which the
  * challenge will be sent.
- */
-/* 
+
  * HOBA - No Password HTTP Authentication
  *
  * Copyright (C) 2013, Tolerant Networks Limited
@@ -18,7 +33,7 @@
  * This program is free software, distributed under the terms of
  * the GNU General Public License
  *
- */
+*/
 
 /// @brief figure out peer to challenge
 /// @return is the peer's IP as seen by server
