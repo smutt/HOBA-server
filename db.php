@@ -130,7 +130,10 @@ function dbGetDeviceByDid($did){
   
   $q = $GLOBALS['db']->query("SELECT uName from users where uid=" . $rv['uid']);
   $r = $q->fetch_assoc();
-  $rv['uName'] = $r['uName'];
+  if(strlen(trim($r['uName'])) > 0) $rv['uName'] = $r['uName'];
+  else{
+    $rv['uName'] = false;
+  }
   $q->close();
 
   $q = $GLOBALS['db']->query("SELECT pid,kid,pubKey from pubKeys where did=" . $did);
@@ -176,6 +179,15 @@ function dbGetDeviceByKid($kid){
   }else{
     return False;
   }
+}
+
+// @brief Takes nothing
+// @return a random name from our table of names
+function randName(){
+  $q = $GLOBALS['db']->query("SELECT firstName from firstNames ORDER BY RAND() LIMIT 0,1");
+  $r = $q->fetch_assoc();
+  $q->close();
+  return $r['firstName'];
 }
 
 ?>
