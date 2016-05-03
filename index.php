@@ -47,8 +47,13 @@ dbLogin();
 
 // Test for cookie
 if(isset($_COOKIE['HOBA'])){
-  if(dbGetDeviceByCookie($_COOKIE['HOBA'])){
-    print "Your cookie is valid. Welcome to HOBA land.";
+  $dev = dbGetDeviceByCookie($_COOKIE['HOBA']);
+  if($dev){
+    if($dev['uName']){
+      print "Welcome user " . $dev['uName'] . " on device " . $dev['dName'];
+    }else{
+      print "Welcome user " . $dev['kid'] . " on device " . $dev['dName'];
+    }
   }else{
     printRefresher();
   }

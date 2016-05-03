@@ -35,5 +35,7 @@ global $sessionTimeout; $sessionTimeout = 60*5; // seconds a session cookie is v
 global $db; $db = Null; // Our database connection
 global $alg; $alg = "0"; // We only support RSA-SHA256
 global $didType; $didType = "0"; // We only support device Type ID 0
+global $userNameMinLen; $userNameMinLen = 5; // Min length of user name
+global $userNameMaxLen; $userNameMaxLen = 20; // Max length of user name
 ?>
 

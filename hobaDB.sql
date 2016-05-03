@@ -45,9 +45,9 @@ CREATE TABLE `sessions` (
   UNIQUE KEY `sid` (`sid`)
 );
 
-CREATE TABLE `challenges` (
-  `cid` int(11) NOT NULL AUTO_INCREMENT,
-  `challenge` text NOT NULL,
-  `tStamp` int unsigned NOT NULL,
-  UNIQUE KEY `cid` (`cid`)
+CREATE TABLE `firstNames` (
+  `nid` int(11) NOT NULL AUTO_INCREMENT,
+  `firstName` text NOT NULL,
+  UNIQUE KEY `nid` (`nid`)
 );
+

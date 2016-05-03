@@ -81,7 +81,8 @@ function dbRegisterKey($kid, $pubKey, $dName){
   if($q->num_rows == 0){ // Do we know this key?
     $q->close();
 
-    $q = $GLOBALS['db']->prepare("INSERT into users(uName) values(NULL)");
+    $name = randName();
+    $q = $GLOBALS['db']->prepare("INSERT into users(uName) values('" . $name . "')");
     $q->execute();
     $uid = $q->insert_id;
     $q->close();
@@ -184,10 +185,18 @@ function dbGetDeviceByKid($kid){
 // @brief Takes nothing
 // @return a random name from our table of names
 function randName(){
+  $suffixInts = 4; // How many integers to add to the end of our name, to expand our 'name'space
+  
   $q = $GLOBALS['db']->query("SELECT firstName from firstNames ORDER BY RAND() LIMIT 0,1");
   $r = $q->fetch_assoc();
+  $rv = $r['firstName'];
   $q->close();
-  return $r['firstName'];
+
+  for($ii = 0; $ii <= $suffixInts; $ii++){
+    $rv .= (string) rand(0, 9);
+  }
+  
+  return $rv;
 }
 
 ?>
