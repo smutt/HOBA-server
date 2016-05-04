@@ -81,7 +81,7 @@ function dbRegisterKey($kid, $pubKey, $dName){
   if($q->num_rows == 0){ // Do we know this key?
     $q->close();
 
-    $name = randName();
+    $name = dbRandName();
     $q = $GLOBALS['db']->prepare("INSERT into users(uName) values('" . $name . "')");
     $q->execute();
     $uid = $q->insert_id;
@@ -158,6 +158,7 @@ function dbGetDeviceByCookie($cookieVal){
     $r = $q->fetch_assoc();
     $q->close();
     if($tStamp > $r['tStamp'] + $GLOBALS['sessionTimeout']){
+      error_log("Cookie timed out");
       return False;
     }else{
       return dbGetDeviceByDid($r['did']);
@@ -184,12 +185,12 @@ function dbGetDeviceByKid($kid){
 
 // @brief Takes nothing
 // @return a random name from our table of names
-function randName(){
+function dbRandName(){
   $suffixInts = 4; // How many integers to add to the end of our name, to expand our 'name'space
   
   $q = $GLOBALS['db']->query("SELECT firstName from firstNames ORDER BY RAND() LIMIT 0,1");
   $r = $q->fetch_assoc();
-  $rv = $r['firstName'];
+  $rv = $r['firstName'] . "_";
   $q->close();
 
   for($ii = 0; $ii <= $suffixInts; $ii++){
@@ -199,4 +200,19 @@ function randName(){
   return $rv;
 }
 
+// @brief Adds a message to the messages table, takes uid and msg
+// @return nothing
+function dbAddMsg($uid, $msg){
+  $q = $GLOBALS['db']->query("INSERT into messages(uid,message) values('" . $uid . "','" . $msg . "')");
+  $q->close();
+}
+
+// @brief Gets messages from messages table, takes most recent numMsgs to return
+// @return mid,uid,messages as assoc array
+function dbGetMsgs($num){
+  $q = $GLOBALS['db']->query("SELECT * from messages ORDER BY mid DESC");
+  $rv = $q->fetch_assoc();
+  $q->close();
+  return $rv;  
+}
 ?>

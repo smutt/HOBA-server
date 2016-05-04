@@ -56,5 +56,8 @@ function printRefresher(){
   exit(0);
 }
 
-
+// Takes msgs as assoc array
+function printMeat($msgs){
+  return false;
+}
 ?>

@@ -51,3 +51,11 @@ CREATE TABLE `firstNames` (
   UNIQUE KEY `nid` (`nid`)
 );
 
+CREATE TABLE `messages` (
+  `mid` int(11) NOT NULL AUTO_INCREMENT,
+  `uid` int(11) NOT NULL,
+  `message` text NOT NULL,
+  UNIQUE KEY `mid` (`mid`)
+);
+
+
