@@ -177,7 +177,11 @@ function dbGetDeviceByKid($kid){
   if($q){
     $r = $q->fetch_assoc();
     $q->close();
-    return dbGetDeviceByDid($r['did']);
+    if(strlen($r['did']) > 0){
+      return dbGetDeviceByDid($r['did']);
+    }else{
+      return False;
+    }
   }else{
     return False;
   }
