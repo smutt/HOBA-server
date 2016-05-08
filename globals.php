@@ -38,6 +38,7 @@ global $alg; $alg = "0"; // We only support RSA-SHA256
 global $didType; $didType = "0"; // We only support device Type ID 0
 global $userNameMinLen; $userNameMinLen = 5; // Min length of user name
 global $userNameMaxLen; $userNameMaxLen = 20; // Max length of user name
+global $numMsgs; $numMsgs = 10; // Number of messages to display on the frontpage
 global $debug; $debug = true; // Is debugging enabled?
 
 // Logging wrapper function

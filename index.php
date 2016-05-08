@@ -39,7 +39,7 @@ if(isset($_COOKIE['HOBA'])){
   $dev = dbGetDeviceByCookie($_COOKIE['HOBA']);
   if($dev){
     printHeader();
-    print "Welcome user " . $dev['uName'] . " on device " . $dev['dName'];
+    printMeat($dev);
     printFooter();
   }else{
     printRefresher();

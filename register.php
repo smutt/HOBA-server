@@ -47,7 +47,7 @@ if($didType != $GLOBALS['didType']){
 }
 // TODO: Check to make sure kid === RSA256(pubKey)
 
-foreach (getallheaders() as $name => $value){
+foreach(getallheaders() as $name => $value){
   //dump("Header:" . $name . " " . $value);
   if($name == "Authorization" && (stripos($value, "hoba") > -1)){
     list($junk, $authStr) = explode("result=", $value);

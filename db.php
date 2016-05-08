@@ -215,9 +215,21 @@ function dbAddMsg($uid, $msg){
 // @brief Gets messages from messages table, takes most recent numMsgs to return
 // @return mid,uid,messages as assoc array
 function dbGetMsgs($num){
-  $q = $GLOBALS['db']->query("SELECT * from messages ORDER BY mid DESC");
-  $rv = $q->fetch_assoc();
+  $q = $GLOBALS['db']->query("SELECT mid,uid,message from messages ORDER BY mid DESC limit " . $num);
+  $msgs = array();  
+  while($row = $q->fetch_assoc()){
+    array_push($msgs, $row);
+  }
   $q->close();
-  return $rv;  
+
+  for($ii = 0; $ii < count($msgs); $ii++){
+    $q = $GLOBALS['db']->query("SELECT uName from users WHERE uid=" . $msgs[$ii]['uid']);
+    $tmp = $q->fetch_assoc();
+    $msgs[$ii]['uName'] = $tmp['uName'];
+    $q->close();
+  }
+
+  return $msgs;
 }
+
 ?>
