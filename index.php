@@ -22,14 +22,22 @@ include_once 'db.php';
 include_once 'crypto.php';
 include_once 'printers.php';
 
+if(isset($_COOKIE['HOBA_LOGIN'])){
+  if($_COOKIE['HOBA_LOGIN'] == "failed"){
+    dump("HOBA_LOGIN == failed");
+    printLoginFailure();
+    exit(1);
+  }
+}
+
 dbLogin();
 
-// Test for cookie
+// Test for cookies
 if(isset($_COOKIE['HOBA'])){
-  error_log("Goot cookie for " . $_COOKIE['HOBA']);
+  dump("Got cookie for " . $_COOKIE['HOBA']);
+  
   $dev = dbGetDeviceByCookie($_COOKIE['HOBA']);
   if($dev){
-    error_log("Got devID for " . $dev['did']);
     printHeader();
     print "Welcome user " . $dev['uName'] . " on device " . $dev['dName'];
     printFooter();
@@ -37,6 +45,13 @@ if(isset($_COOKIE['HOBA'])){
     printRefresher();
   }
 }else{
+  if(isset($_COOKIE['HOBA_LOGIN'])){
+    if($_COOKIE['HOBA_LOGIN'] == "attempt"){
+      printLoginFailure();
+      dbLogout();
+      exit(1);
+    }
+  }
   printRefresher();
 }
 dbLogout();

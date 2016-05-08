@@ -32,21 +32,23 @@ $pub = base64url_decode($_POST["pub"]);
 $pubKey = array();
 $pubKey = json_decode($pub, true);
 
-error_log("HOBA: Starting New Registration");
+dump("HOBA: Starting New Registration");
 //$postData = "did:" . $did . " didType:" . $didType . " alg:" . $alg . " kid:" . $kid . " kidType:" . $kidType . " pub:" . $pub;
-//error_log("postData:" . $postData);
+//dump("postData:" . $postData);
 if($pubKey['kty'] != "RSA" || $pubKey['alg'] != "RS256"  || $alg != $GLOBALS['alg']){
-  error_log("HOBA: Unsupported algorithm for public key");
+  dump("HOBA: Unsupported algorithm for public key");
+  setFailCookie();
   exit(1);
 }
 if($didType != $GLOBALS['didType']){
-  error_log("HOBA: Unsupported device ID type");
+  dump("HOBA: Unsupported device ID type");
+  setFailCookie();
   exit(1);
 }
 // TODO: Check to make sure kid === RSA256(pubKey)
 
 foreach (getallheaders() as $name => $value){
-  //error_log("Header:" . $name . " " . $value);
+  //dump("Header:" . $name . " " . $value);
   if($name == "Authorization" && (stripos($value, "hoba") > -1)){
     list($junk, $authStr) = explode("result=", $value);
     $kidB64 = strtok($authStr, ".");
@@ -55,17 +57,19 @@ foreach (getallheaders() as $name => $value){
     $sig = base64url_decode(strtok("."));
 
     if($kid != base64url_decode($kidB64)){
-      error_log("HOBA: kid in POST different from kid in Auth Header");
+      dump("HOBA: kid in POST different from kid in Auth Header");
+      setFailCookie();
       exit(1);
     }
   }
 }
-//error_log("kidB64:" . $kidB64 . " chalB64:" . $chalB64 . " nonceB64:" . $nonceB64 ." sig:" . $sig);
+//dump("kidB64:" . $kidB64 . " chalB64:" . $chalB64 . " nonceB64:" . $nonceB64 ." sig:" . $sig);
 
 if(checkChal($chalB64, getPeer())){
-  error_log("HOBA: Challenge accepted");
+  dump("HOBA: Challenge accepted");
 }else{
-  error_log("HOBA: Challenge failed");
+  dump("HOBA: Challenge failed");
+  setFailCookie();
   exit(1);
 }
 
@@ -76,19 +80,22 @@ $verified = openssl_verify($sigText, $sig, $pem, OPENSSL_ALGO_SHA256);
 
 dbLogin();
 if($verified){
-  error_log("HOBA: Key Verification Successful");
+  dump("HOBA: Key Verification Successful");
   $newUser = dbRegisterKey($kid, $pubKey, $did);
   if(! $newUser){
-    error_log("HOBA: Register failed, verification passed but kid already registered");
+    dump("HOBA: Register failed, verification passed but kid already registered");
     exit(1);
   }
+
+  $t = time() + $GLOBALS['sessionTimeout'];
   $chocolate = getCookieVal($kid, $did);
-  dbAddSession($kid, $did, $chocolate);
-  setcookie("HOBA", $chocolate, time() + $GLOBALS['sessionTimeout'], "/hoba/", $_SERVER['SERVER_NAME'], true, false);
+  dbAddSession($kid, $did, $chocolate, $t);
+  setSuccessCookie($chocolate, $t);
   header("Hobareg: regok", true, 200);
-  error_log("HOBA: Registration Successful");
+  dump("HOBA: Registration Successful");
 }else{
-  error_log("HOBA: Register failed, Verification failure");
+  setFailCookie();
+  dump("HOBA: Register failed, Verification failure");
 }
 dbLogout();
 ?>

@@ -103,7 +103,7 @@ function dbRegisterKey($kid, $pubKey, $dName){
 
 // @brief Adds new cookie value to a did, which is basically a session
 // @return nothing
-function dbAddSession($kid, $dName, $cookieVal){
+function dbAddSession($kid, $dName, $cookieVal, $t){
   $dName = trim($GLOBALS['db']->real_escape_string($dName));
   $cookieVal = trim($cookieVal);
 
@@ -111,8 +111,7 @@ function dbAddSession($kid, $dName, $cookieVal){
   $r = $q->fetch_assoc();
   $q->close();
         
-  $tStamp = time();
-  $q = $GLOBALS['db']->prepare("INSERT into sessions(did, cookie, tStamp) values(" . $r['did'] . ", '" . $cookieVal . "', " . $tStamp . ")");
+  $q = $GLOBALS['db']->prepare("INSERT into sessions(did, cookie, tStamp) values(" . $r['did'] . ", '" . $cookieVal . "', " . $t . ")");
   $q->execute();
   $q->close();
 }
@@ -151,6 +150,8 @@ function dbGetDeviceByDid($did){
 // @return device array if cookie value is valid and not expired, false otherwise
 function dbGetDeviceByCookie($cookieVal){
   $cookieVal = trim($cookieVal);
+  if(strtolower($cookieVal) == "failed" || strtolower($cookieVal) == "attempt" ) return False; // Defensive programming
+
   $tStamp = time();
   
   $q = $GLOBALS['db']->query("SELECT did,tStamp from sessions where cookie='" . $cookieVal . "'");
@@ -158,7 +159,7 @@ function dbGetDeviceByCookie($cookieVal){
     $r = $q->fetch_assoc();
     $q->close();
     if($tStamp > $r['tStamp'] + $GLOBALS['sessionTimeout']){
-      error_log("Cookie timed out");
+      dump("Cookie timed out");
       return False;
     }else{
       return dbGetDeviceByDid($r['did']);

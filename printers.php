@@ -36,20 +36,21 @@ function printFooter(){
 
 // Sends HOBA headers, prints our HTML refresher, then exits
 function printRefresher(){
+  setcookie("HOBA_LOGIN", "attempt", time() + $GLOBALS['retryTimeout'], "/hoba/", $_SERVER['SERVER_NAME'], true, false);
+
   $chal = getChal(getPeer());
-  
   header('WWW-Authenticate: HOBA: challenge=' . $chal . ",expires=" . $GLOBALS['chalTimeout']);
   header('HTTP/1.0 401 Unauthorized');
 
   print "\n<html>";
   print "\n<head>";
-  print "\n  <meta http-equiv=\"refresh\" content=\"1;URL=index.php\"/>";
+  print "\n  <meta http-equiv=\"refresh\" content=\"3;URL=index.php\"/>";
   print "\n  <title>";
   print "\n    Redirecting...";
   print "\n  </title>";
   print "\n</head>";
   print "\n<body>";
-  print "\n  If you are not redirected please click <a href=\"index.php\">here</a>.";
+  print "\n  Processing...";
   print "\n</body>";
   print "\n</html>";
 
@@ -59,5 +60,12 @@ function printRefresher(){
 // Takes msgs as assoc array
 function printMeat($msgs){
   return false;
+}
+
+// What users see if they fail to login
+function printLoginFailure(){
+  printHeader();
+  print "\nHOBA Login Failed: Your browser does not support HOBA, or something else broke";
+  printFooter();
 }
 ?>

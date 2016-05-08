@@ -23,9 +23,9 @@ include_once 'db.php';
 include_once 'lib/BigInteger.php';
 include_once 'lib/phpseclib1.0.1/Crypt/RSA.php';
 
-error_log("HOBA: Starting New Login");
+dump("HOBA: Starting New Login");
 foreach (getallheaders() as $name => $value){
-  //error_log("Header:" . $name . " " . $value);
+  //dump("Header:" . $name . " " . $value);
   if($name == "Authorization" && (stripos($value, "hoba") > -1)){
     list($junk, $authStr) = explode("result=", $value);
     $kidB64 = strtok($authStr, ".");
@@ -34,12 +34,13 @@ foreach (getallheaders() as $name => $value){
     $sig = base64url_decode(strtok("."));
   }
 }
-//error_log("kidB64:" . $kidB64 . " chalB64:" . $chalB64 . " nonceB64:" . $nonceB64 ." sig:" . $sig);
+//dump("kidB64:" . $kidB64 . " chalB64:" . $chalB64 . " nonceB64:" . $nonceB64 ." sig:" . $sig);
 
 if(checkChal($chalB64, getPeer())){
-  error_log("HOBA: Challenge accepted");
+  dump("HOBA: Challenge accepted");
 }else{
-  error_log("HOBA: Challenge failed");
+  dump("HOBA: Challenge failed");
+  setFailCookie();
   exit(1);
 }
 
@@ -50,7 +51,8 @@ $sigText = genTbsBlob($nonceB64, $GLOBALS['alg'], $tbsOrigin, $kidB64, $chalB64)
 dbLogin();
 $device = dbGetDeviceByKid($kid);
 if(! $device){
-  error_log("HOBA: kid not found");
+  dump("HOBA: kid not found");
+  setFailCookie();
   dbLogout();
   exit(1);
 }
@@ -59,16 +61,18 @@ $pem = jwkToPem($device['pubKey']);
 $verified = openssl_verify($sigText, $sig, $pem, OPENSSL_ALGO_SHA256);
 
 if($verified){
-  error_log("HOBA: Key Verification Successful");
+  dump("HOBA: Key Verification Successful");
   $user = dbGetDeviceByKid($kid);
-  
+
+  $t = time() + $GLOBALS['sessionTimeout'];
   $chocolate = getCookieVal($user['kid'], $user['did']);
-  dbAddSession($user['kid'], $user['did'], $chocolate);
-  setcookie("HOBA", $chocolate, time() + $GLOBALS['sessionTimeout'], "/hoba/", $_SERVER['SERVER_NAME'], true, false);
+  dbAddSession($user['kid'], $user['did'], $chocolate, $t);
+  setSuccessCookie($chocolate, $t);
   header("Hobareg: regok", true, 200);
-  error_log("HOBA: Login Successful");
+  dump("HOBA: Login Successful");
 }else{
-  error_log("HOBA: Register failed, Verification failure");
+  setFailCookie();
+  dump("HOBA: Login failed, Verification failure");
 }
 dbLogout();
 ?>

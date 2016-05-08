@@ -98,7 +98,8 @@ function checkChal($challenge,$from)
 
 // Generates a value for our session cookie
 function getCookieVal($kid, $did){
-  return base64url_encode(crypt($kid . $did, $GLOBALS['cookieSalt']));
+  $nonce = openssl_random_pseudo_bytes(32);
+  return base64url_encode(crypt($kid . $did . $nonce, $GLOBALS['cookieSalt']));
 }
 
 // These 2 functions taken from http://php.net/manual/en/function.base64-encode.php

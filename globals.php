@@ -23,7 +23,7 @@
 
 // Die if connection not using TLS
 if(strlen($_SERVER['HTTPS']) == 0){
-  error_log("HOBA: Connection not using HTTPS. Connection terminated.");
+  dump("HOBA: Connection not using HTTPS. Connection terminated.");
   exit(1);
 }
 
@@ -32,10 +32,30 @@ global $sig_replay_width; $sig_replay_width = $chalTimeout * 2; // This is used 
 global $realm; $realm = ""; // For now we don't use this
 global $cookieSalt; $cookieSalt = '$5$hd93kb7wdqlkd38h'; // $5$ means use SHA-256
 global $sessionTimeout; $sessionTimeout = 60*30; // seconds a session cookie is valid for
+global $retryTimeout; $retryTimeout = 60*5; // seconds the login_failed cookie is good for
 global $db; $db = Null; // Our database connection
 global $alg; $alg = "0"; // We only support RSA-SHA256
 global $didType; $didType = "0"; // We only support device Type ID 0
 global $userNameMinLen; $userNameMinLen = 5; // Min length of user name
 global $userNameMaxLen; $userNameMaxLen = 20; // Max length of user name
+global $debug; $debug = true; // Is debugging enabled?
+
+// Logging wrapper function
+function dump($str){
+  if($GLOBALS['debug'] == true){
+    error_log($str);
+  }
+}
+
+// Sets login failure cookie so we don't retry login infinitely
+function setFailCookie(){
+  setcookie("HOBA_LOGIN", "failed", time() + $GLOBALS['retryTimeout'], "/hoba/", $_SERVER['SERVER_NAME'], true, false);
+}
+
+// Sets login success cookie
+function setSuccessCookie($val, $t){
+  setcookie("HOBA", $val, $t, "/hoba/", $_SERVER['SERVER_NAME'], true, false);
+  setcookie("HOBA_LOGIN", "success", time() + $GLOBALS['retryTimeout'], "/hoba/", $_SERVER['SERVER_NAME'], true, false);
+}
 ?>
 
