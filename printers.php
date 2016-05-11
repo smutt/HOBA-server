@@ -48,13 +48,12 @@ function printHeader(){
   print "\n  <title>";
   print "\n    HOBA Test ";
   print "\n  </title>";
+  print "\n  <link rel=\"stylesheet\" type=\"text/css\" href=\"hoba.css\" />";
   print "\n</head>";
   print "\n<body>";
-  print "\n  <center>";
 }
 
 function printFooter(){
-  print "\n  </center>";
   print "\n</body>";
   print "\n</html>";
 }
@@ -63,40 +62,40 @@ function printFooter(){
 function printMeat($dev){
   $msgs = dbGetMsgs($GLOBALS['numMsgs']);
 
-  // Build our side column
-  $side = array();
-  array_push($side, "\n<td></td>");
-  array_push($side, "\n<td><center>" . $dev['uName'] . "</center></td>");
-  array_push($side, "\n<td></td>");
-  array_push($side, "\n<td></td>");
-  array_push($side, "\n<td rowspan='3'><center><form action='index.php' method='POST'><input type='text' name='uName'><br/>\n
-             <input type='submit' name='changeUser' value='Change User Name'></center></td>");
-
-  print "\n<table>";
-  print "\n<tr><td><img src='hoba-stamp.jpg' height='150' width='200'></td>";
-  print "\n<td><center><h4>Leave a Message</h4></center></td>";
-  print "\n<td colspan='2'><center><h4>Bond You Devices</h4></center></td></tr>";
+  // Our top table
+  print "\n<div align='center'><table width='100%'>";
+  print "\n<tr><td align='left'><a href='index.php'><img src='hoba-stamp.jpg' height='150' width='200'></a></td>";
+  print "<td class='user'><h4>Welcome " . $dev['uName'] . "</h4><br/>";
+  print "\n<form action='index.php' method='POST'><input type='text' name='uName'><br/>\n
+             <input type='submit' name='changeUser' value='Change User Name'></td></tr>";
+  print "\n</table></div>";
   
-  for($ii=0; $ii < $GLOBALS['numMsgs']; $ii++){
-    if(isset($side[$ii]) || isset($msgs[$ii])){
-      print "\n<tr>";
-    }
+  // Our big message table
+  print "\n<div class='meat'><center>";
+  print "\n<table>";
+  print "\n<tr><td></td>";
+  print "\n<td colspan='2'><center><h4></h4></center></td>";
+  print "\n<td><center><h4></h4></center></td></tr>";
+  
+  for($ii=0; $ii < count($msgs); $ii++){
+    print "\n<tr><td></td>";
     
-    if(isset($side[$ii])){
-      print $side[$ii];
+    print "\n<td class='large'>" . $msgs[$ii]['message'] . "</td>";
+    print "\n<td>" . $msgs[$ii]['uName'] . "</td>";
+    if($dev['uid'] != $msgs[$ii]['uid']){
+      //print "\n<td><form action='index.php' method='POST'><input type='submit' name='bondUser' value='Bond " . $msgs[$ii]['uName'] . "'/></td>";
+      print "\n<td><form action='index.php' method='POST'><input type='submit' name='bondUser' value=\"This is me\"/></td>";
     }
-        
-    if(isset($msgs[$ii])){
-      print "\n<td>" . $msgs[$ii]['message'] . "</td>";
-      print "\n<td>" . $msgs[$ii]['uName'] . "</td>";
-      if($dev['uid'] != $msgs[$ii]['uid']){
-        print "\n<td><form action='index.php' method='POST'><input type='submit' name='bondUser' value='Bond " . $msgs[$ii]['uName'] . "'></td>";
-      }
-      print "\n</tr>";
-    }
+    print "\n</tr>";
   }
-  print "\n</table>";
 
+  print "\n<tr></tr>";
+  print "\n<tr><td class='small'><h4>Say Something</h4></td><td class='large'><form id='leaveMsg' method='POST' action='index.php'>\n
+             <textarea form='leaveMsg' name='msg' maxlength='1000' onfocus=\"this.value='';\" required>Something...</textarea></td>";
+  print "\n<td class='small'><input type='submit' name='bondUser' value='Post Message'></td></form></tr>";
+  
+  print "\n</table>";
+  print "\n</center></div>";
 }
 
 // What users see if they fail to login
