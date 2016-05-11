@@ -24,7 +24,7 @@ include_once 'printers.php';
 
 if(isset($_COOKIE['HOBA_LOGIN'])){
   if($_COOKIE['HOBA_LOGIN'] == "failed"){
-    dump("HOBA_LOGIN == failed");
+    dump("Got cookie login failed");
     printLoginFailure();
     exit(1);
   }
@@ -38,6 +38,34 @@ if(isset($_COOKIE['HOBA'])){
   
   $dev = dbGetDeviceByCookie($_COOKIE['HOBA']);
   if($dev){
+    if(isset($_POST)){ // Handle all HTTP POSTs
+
+      if(isset($_POST['uName'])){ // Handle user name change
+        $rv = dbSetUserName($dev['uid'], $_POST['uName']);
+        if($rv !== true){
+          dump($rv);
+        }
+      }
+
+      if(isset($_POST['msg'])){ // Handle message POSTing
+        $rv = dbAddMsg($dev['uid'], $_POST['msg']);
+        if($rv !== true){
+          dump($rv);
+        }
+      }
+
+      if(isset($_POST['bondRequester'])){ // Handle bond user POST
+        if(! isset($_POST['bondTarget'])){
+          dump("bondRequester:" . $_POST['bondRequester'] . " present but bondTarget not present");
+        }
+
+        $rv = dbAddBondAttempt($dev['uid'], $_POST['bondRequester'], $_POST['bondTarget']);
+        if($rv !== true){
+          dump($rv);
+        }
+      }
+    }
+
     printHeader();
     printMeat($dev);
     printFooter();

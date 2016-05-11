@@ -83,7 +83,6 @@ function printMeat($dev){
     print "\n<td class='large'>" . $msgs[$ii]['message'] . "</td>";
     print "\n<td>" . $msgs[$ii]['uName'] . "</td>";
     if($dev['uid'] != $msgs[$ii]['uid']){
-      //print "\n<td><form action='index.php' method='POST'><input type='submit' name='bondUser' value='Bond " . $msgs[$ii]['uName'] . "'/></td>";
       print "\n<td><form action='index.php' method='POST'><input type='submit' name='bondUser' value=\"This is me\"/></td>";
     }
     print "\n</tr>";

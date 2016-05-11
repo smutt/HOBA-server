@@ -190,6 +190,7 @@ function dbGetDeviceByKid($kid){
 
 // @brief Takes nothing
 // @return a random name from our table of names
+// TODO: Check if username is already in use
 function dbRandName(){
   $suffixInts = 4; // How many integers to add to the end of our name, to expand our 'name'space
   
@@ -203,13 +204,6 @@ function dbRandName(){
   }
   
   return $rv;
-}
-
-// @brief Adds a message to the messages table, takes uid and msg
-// @return nothing
-function dbAddMsg($uid, $msg){
-  $q = $GLOBALS['db']->query("INSERT into messages(uid,message) values('" . $uid . "','" . $msg . "')");
-  $q->close();
 }
 
 // @brief Gets messages from messages table, takes most recent numMsgs to return
@@ -230,6 +224,39 @@ function dbGetMsgs($num){
   }
 
   return $msgs;
+}
+
+// @brief takes user name
+// @return true on success, otherwise string explaining failure
+function dbSetUserName($uid, $str){
+  $str = strtolower($str);
+
+  if(count($str) >= $GLOBALS['userNameMaxLen'] && count($str) <= $GLOBALS['userNameMinLen'] ){
+    return "Username must be between " . $GLOBALS['userNameMinLen'] . " and " .$GLOBALS['userNameMaxLen'] . " characters";
+  }
+
+  if(preg_filter("/^[A-Z,a-z,0-9,-_]+$/", "", $str) != ""){
+    return "Username can only contain characters A-Z a-z 0-9 _ +";
+  }
+
+  $q = $GLOBALS['db']->query("UPDATE users set uName='" . $str . "' where uid=" . $uid);
+  return true;
+}
+
+// @brief Adds a message to the messages table, takes uid and msg
+// @return true on success, otherwise string explaining failure
+function dbAddMsg($uid, $msg){
+  // TODO: Add escaping of msg
+
+  $q = $GLOBALS['db']->query("INSERT into messages(uid,message) values('" . $uid . "','" . $msg . "')");
+  $q->close();
+  return true;
+}
+
+// @brief Adds a bond attempt to mapping table
+// @return true on success, otherwise string explaining failure
+function dbAddBondAttemp($uid, $requester, $target){
+  return false;
 }
 
 ?>
