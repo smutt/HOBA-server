@@ -38,37 +38,30 @@ if(isset($_COOKIE['HOBA'])){
   
   $dev = dbGetDeviceByCookie($_COOKIE['HOBA']);
   if($dev){
-    if(isset($_POST)){ // Handle all HTTP POSTs
-
-      if(isset($_POST['uName'])){ // Handle user name change
-        $rv = dbSetUserName($dev['uid'], $_POST['uName']);
-        if($rv !== true){
-          dump($rv);
-        }
-      }
-
-      if(isset($_POST['msg'])){ // Handle message POSTing
-        $rv = dbAddMsg($dev['uid'], $_POST['msg']);
-        if($rv !== true){
-          dump($rv);
-        }
-      }
-
-      if(isset($_POST['bondRequester'])){ // Handle bond user POST
-        if(! isset($_POST['bondTarget'])){
-          dump("bondRequester:" . $_POST['bondRequester'] . " present but bondTarget not present");
-        }
-
-        $rv = dbAddBondAttempt($dev['uid'], $_POST['bondRequester'], $_POST['bondTarget']);
-        if($rv !== true){
-          dump($rv);
-        }
-      }
+    if(isset($_POST['uName'])){ // Handle user name change
+      $err = dbSetUserName($dev['uid'], $_POST['uName']);
+    }elseif(isset($_POST['msg'])){ // Handle message POSTing
+      $err = dbAddMsg($dev['uid'], $_POST['msg']);
+    }elseif(isset($_POST['bondRequester'])){ // Handle bond user POST
+      if(! isset($_POST['bondTarget'])){
+        dump("bondRequester:" . $_POST['bondRequester'] . " present but bondTarget not present");
+      }        
+      $err = dbAddBondAttempt($dev['uid'], $_POST['bondRequester'], $_POST['bondTarget']);
     }
-
+    
     printHeader();
-    printMeat($dev);
+    if(isset($err)){
+      if($err !== true){
+        dump($err);
+        printMeat($dev['did'], $err);
+      }else{
+        printMeat($dev['did'], "");
+      }
+    }else{
+      printMeat($dev['did'], "");
+    }
     printFooter();
+
   }else{
     printRefresher();
   }

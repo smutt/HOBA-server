@@ -192,18 +192,18 @@ function dbGetDeviceByKid($kid){
 // @return a random name from our table of names
 // TODO: Check if username is already in use
 function dbRandName(){
-  $suffixInts = 4; // How many integers to add to the end of our name, to expand our 'name'space
-  
   $q = $GLOBALS['db']->query("SELECT firstName from firstNames ORDER BY RAND() LIMIT 0,1");
   $r = $q->fetch_assoc();
-  $rv = $r['firstName'] . "_";
+  $fn = "Anon_" . $r['firstName'];
   $q->close();
 
-  for($ii = 0; $ii <= $suffixInts; $ii++){
-    $rv .= (string) rand(0, 9);
+  $q = $GLOBALS['db']->query("SELECT uid from users WHERE uName='" . $fn . "'");
+  if(count($q->fetch_assoc()) == 0){
+    return $fn;
+  }else{
+    dump("Recursing in dbRandName() because " . $fn);
+    return dbRandName();
   }
-  
-  return $rv;
 }
 
 // @brief Gets messages from messages table, takes most recent numMsgs to return
@@ -229,9 +229,9 @@ function dbGetMsgs($num){
 // @brief takes user name
 // @return true on success, otherwise string explaining failure
 function dbSetUserName($uid, $str){
-  $str = strtolower($str);
+  $str = trim($str);
 
-  if(count($str) >= $GLOBALS['userNameMaxLen'] && count($str) <= $GLOBALS['userNameMinLen'] ){
+  if(strlen($str) >= $GLOBALS['userNameMaxLen'] || strlen($str) <= $GLOBALS['userNameMinLen']){
     return "Username must be between " . $GLOBALS['userNameMinLen'] . " and " .$GLOBALS['userNameMaxLen'] . " characters";
   }
 
@@ -246,10 +246,10 @@ function dbSetUserName($uid, $str){
 // @brief Adds a message to the messages table, takes uid and msg
 // @return true on success, otherwise string explaining failure
 function dbAddMsg($uid, $msg){
-  // TODO: Add escaping of msg
+  $msg = trim($GLOBALS['db']->real_escape_string($msg));
+  // TODO: THink about escaping a bit more
 
   $q = $GLOBALS['db']->query("INSERT into messages(uid,message) values('" . $uid . "','" . $msg . "')");
-  $q->close();
   return true;
 }
 

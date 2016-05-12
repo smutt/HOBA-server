@@ -58,18 +58,19 @@ function printFooter(){
   print "\n</html>";
 }
 
-// Takes msgs as assoc array
-function printMeat($dev){
+// Takes msgs as assoc array and an error string
+function printMeat($did, $errStr){
+  $dev = dbGetDeviceByDid($did);
   $msgs = dbGetMsgs($GLOBALS['numMsgs']);
 
   // Our top table
   print "\n<div align='center'><table width='100%'>";
   print "\n<tr><td align='left'><a href='index.php'><img src='hoba-stamp.jpg' height='150' width='200'></a></td>";
-  print "<td class='user'><h4>Welcome " . $dev['uName'] . "</h4><br/>";
+  print "<td class='user'><h4>" . $dev['uName'] . "</h4><br/>";
   print "\n<form action='index.php' method='POST'><input type='text' name='uName'><br/>\n
-             <input type='submit' name='changeUser' value='Change User Name'></td></tr>";
+             <input type='submit' name='changeUser' value='Change User Name'></form></td></tr>";
   print "\n</table></div>";
-  
+ 
   // Our big message table
   print "\n<div class='meat'><center>";
   print "\n<table>";
@@ -78,12 +79,13 @@ function printMeat($dev){
   print "\n<td><center><h4></h4></center></td></tr>";
   
   for($ii=0; $ii < count($msgs); $ii++){
+    $message = trim(htmlspecialchars($msgs[$ii]['message']));
+
     print "\n<tr><td></td>";
-    
-    print "\n<td class='large'>" . $msgs[$ii]['message'] . "</td>";
+    print "\n<td class='large'>" . $message . "</td>";
     print "\n<td>" . $msgs[$ii]['uName'] . "</td>";
     if($dev['uid'] != $msgs[$ii]['uid']){
-      print "\n<td><form action='index.php' method='POST'><input type='submit' name='bondUser' value=\"This is me\"/></td>";
+      print "\n<td><form action='index.php' method='POST'><input type='submit' name='bondUser' value=\"This is me\"/></form></td>";
     }
     print "\n</tr>";
   }
