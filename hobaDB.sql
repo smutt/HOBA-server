@@ -58,4 +58,10 @@ CREATE TABLE `messages` (
   UNIQUE KEY `mid` (`mid`)
 );
 
+CREATE TABLE `bondMap` (
+  `bid` int(11) NOT NULL AUTO_INCREMENT,
+  `srcDid` int(11) NOT NULL,
+  `trgUid` int(11) NOT NULL,
+  UNIQUE KEY `bid` (`bid`)
+);
 
