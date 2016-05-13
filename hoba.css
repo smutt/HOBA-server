@@ -44,3 +44,8 @@ textarea {
 tr.bottom {
     border:
 }
+
+td.err {
+    text-align: center;
+    color: red;
+}

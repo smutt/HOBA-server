@@ -231,12 +231,11 @@ function dbGetMsgs($num){
 function dbSetUserName($uid, $str){
   $str = trim($str);
 
+  if(preg_replace("/^[A-Z,a-z,0-9,-_]+$/", "", $str) !== ""){
+    return "Username can only contain characters A-Z a-z 0-9 _ +";
+  }
   if(strlen($str) >= $GLOBALS['userNameMaxLen'] || strlen($str) <= $GLOBALS['userNameMinLen']){
     return "Username must be between " . $GLOBALS['userNameMinLen'] . " and " .$GLOBALS['userNameMaxLen'] . " characters";
-  }
-
-  if(preg_filter("/^[A-Z,a-z,0-9,-_]+$/", "", $str) != ""){
-    return "Username can only contain characters A-Z a-z 0-9 _ +";
   }
 
   $q = $GLOBALS['db']->query("UPDATE users set uName='" . $str . "' where uid=" . $uid);
@@ -247,16 +246,65 @@ function dbSetUserName($uid, $str){
 // @return true on success, otherwise string explaining failure
 function dbAddMsg($uid, $msg){
   $msg = trim($GLOBALS['db']->real_escape_string($msg));
-  // TODO: THink about escaping a bit more
-
   $q = $GLOBALS['db']->query("INSERT into messages(uid,message) values('" . $uid . "','" . $msg . "')");
   return true;
 }
 
 // @brief Adds a bond attempt to mapping table
 // @return true on success, otherwise string explaining failure
-function dbAddBondAttemp($uid, $requester, $target){
-  return false;
+function dbRequestBond($srcDid, $trgUid){
+  $q = $GLOBALS['db']->query("SELECT srcDid,trgUid from bondMap where srcDid=" . $srcDid . " AND trgUid=" . $trgUid);
+  $bond = $q->fetch_assoc();
+  if(count($bond) != 0){
+    return "Bond attempt already in progress";
+  }
+  $q->close();
+
+  $q = $GLOBALS['db']->query("INSERT into bondMap(srcDid,trgUid) values(" . $srcDid . "," . $trgUid . ")");
+  return true;  
 }
 
+// @brief Deletes all bond attempts from mapping table that match passed values
+// @return true on success, otherwise string explaining failure
+function dbDeleteBond($srcDid, $trgUid){
+  $q = $GLOBALS['db']->query("SELECT srcDid,trgUid from bondMap where srcDid=" . $srcDid . " AND trgUid=" . $trgUid);
+  if($q === false){
+    return "Bond attempt does not exist";
+  }
+  $q->close();
+
+  $GLOBALS['db']->query("DELETE from bondMap where srcDid=" . $srcDid . " AND trgUid=" . $trgUid);
+  return true;
+}
+
+// @brief Changes the uid of a device
+// @return true on success, otherwise string explaining failure
+function dbConfirmBond($srcDid, $trgUid){
+  $q = $GLOBALS['db']->query("SELECT srcDid,trgUid from bondMap where srcDid=" . $srcDid . " AND trgUid=" . $trgUid);
+  if($q === false){
+    dump("Bond attempt does not exist" . $srcDid . " " . $trgUid); // This should never happen
+    return "Bond attempt does not exist";
+  }
+
+  $GLOBALS['db']->query("UPDATE devices set uid=" . $trgUid . " WHERE did=" . $srcDid);
+  return dbDeleteBond($srcDid, $trgUid);
+}
+
+// @brief fetches least recent bond attempt for passed user ID
+// @return assoc array(targetUid, targetUserName), false if none present
+function dbGetBondAttempt($trgUid){
+  $q = $GLOBALS['db']->query("SELECT srcDid from bondMap where trgUid=" . $trgUid . " ORDER by bid ASC limit 1");
+  $bond = $q->fetch_assoc();
+  $q->close();
+
+  if(count($bond) == 0){
+    return false;
+  }
+  
+  $q = $GLOBALS['db']->query("SELECT dName from devices where did=" . $bond['srcDid']);
+  $dev = $q->fetch_assoc();
+  $q->close();
+
+  return array('did' => $bond['srcDid'], 'dName' => $dev['dName']);
+}
 ?>

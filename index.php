@@ -38,15 +38,21 @@ if(isset($_COOKIE['HOBA'])){
   
   $dev = dbGetDeviceByCookie($_COOKIE['HOBA']);
   if($dev){
-    if(isset($_POST['uName'])){ // Handle user name change
+    if(isset($_POST['uName'])){
       $err = dbSetUserName($dev['uid'], $_POST['uName']);
-    }elseif(isset($_POST['msg'])){ // Handle message POSTing
+    }elseif(isset($_POST['msg'])){
       $err = dbAddMsg($dev['uid'], $_POST['msg']);
-    }elseif(isset($_POST['bondRequester'])){ // Handle bond user POST
-      if(! isset($_POST['bondTarget'])){
-        dump("bondRequester:" . $_POST['bondRequester'] . " present but bondTarget not present");
-      }        
-      $err = dbAddBondAttempt($dev['uid'], $_POST['bondRequester'], $_POST['bondTarget']);
+    }elseif(isset($_POST['bondAttempt'])){
+      $err = dbRequestBond($dev['did'], $_POST['bondAttemptTarget']);
+    }elseif(isset($_POST['bondConfirm'])){
+      dump("Got bond confirmation");
+      if($_POST['bondMe'] === "false"){
+        dump("Got bond confirmation false");
+        $err = dbDeleteBond($_POST['bondConfirmSource'], $dev['uid']);
+      }elseif($_POST['bondMe'] === "true"){
+        dump("Got bond confirmation true");
+        $err = dbConfirmBond($_POST['bondConfirmSource'], $dev['uid']);
+      }
     }
     
     printHeader();
