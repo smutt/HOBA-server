@@ -45,12 +45,9 @@ if(isset($_COOKIE['HOBA'])){
     }elseif(isset($_POST['bondAttempt'])){
       $err = dbRequestBond($dev['did'], $_POST['bondAttemptTarget']);
     }elseif(isset($_POST['bondConfirm'])){
-      dump("Got bond confirmation");
       if($_POST['bondMe'] === "false"){
-        dump("Got bond confirmation false");
         $err = dbDeleteBond($_POST['bondConfirmSource'], $dev['uid']);
       }elseif($_POST['bondMe'] === "true"){
-        dump("Got bond confirmation true");
         $err = dbConfirmBond($_POST['bondConfirmSource'], $dev['uid']);
       }
     }
