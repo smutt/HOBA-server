@@ -67,8 +67,8 @@ function printMeat($did, $errStr){
   print "\n<div align='center'><table width='100%'>";
   print "\n<tr><td align='left'><a href='index.php'><img src='hoba-stamp.jpg' height='150' width='200'></a></td>";
 
-  if(strlen($errStr > 0)){
-    print "\n<td class='err'>" . $errStr . "</td>";
+  if(strlen($errStr) != 0){
+    print "\n<td class='err'>Error: " . $errStr . "</td>";
   }else{
     $attempt = dbGetBondAttempt($dev['uid']);
     if($attempt !== false){  // Print out Bond confirm form

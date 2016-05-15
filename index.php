@@ -53,18 +53,14 @@ if(isset($_COOKIE['HOBA'])){
     }
     
     printHeader();
-    if(isset($err)){
-      if($err !== true){
-        dump($err);
-        printMeat($dev['did'], $err);
-      }else{
-        printMeat($dev['did'], "");
-      }
+    if($err !== true){
+      dump($err);
+      printMeat($dev['did'], $err);
     }else{
       printMeat($dev['did'], "");
     }
     printFooter();
-
+    
   }else{
     printRefresher();
   }

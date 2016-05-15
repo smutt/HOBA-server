@@ -278,6 +278,7 @@ function dbDeleteBond($srcDid, $trgUid){
 }
 
 // @brief Changes the uid of a device
+// Changes all devices under the old 
 // @return true on success, otherwise string explaining failure
 function dbConfirmBond($srcDid, $trgUid){
   $q = $GLOBALS['db']->query("SELECT srcDid,trgUid from bondMap where srcDid=" . $srcDid . " AND trgUid=" . $trgUid);
@@ -286,7 +287,16 @@ function dbConfirmBond($srcDid, $trgUid){
     return "Bond attempt does not exist";
   }
 
-  $GLOBALS['db']->query("UPDATE devices set uid=" . $trgUid . " WHERE did=" . $srcDid);
+  // Get the old uid
+  $q = $GLOBALS['db']->query("SELECT uid from devices WHERE did=" . $srcDid);
+  $old = $q->fetch_assoc();
+  $q->close();
+  $oldUid = $old['uid'];
+  
+  $GLOBALS['db']->query("UPDATE devices set uid=" . $trgUid . " WHERE uid=" . $oldUid);
+  $GLOBALS['db']->query("UPDATE messages set uid=" . $trgUid . " WHERE uid=" . $oldUid);
+  $GLOBALS['db']->query("delete from users where uid=" . $oldUid);
+  
   return dbDeleteBond($srcDid, $trgUid);
 }
 
