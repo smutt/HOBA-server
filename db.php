@@ -107,6 +107,10 @@ function dbAddSession($kid, $dName, $cookieVal, $t){
   $dName = trim($GLOBALS['db']->real_escape_string($dName));
   $cookieVal = trim($cookieVal);
 
+  // Delete really old sessions, Otherwise they never get deleted
+  $cutOff = time() - $GLOBALS['sessionTimeout'] * 10;
+  $GLOBALS['db']->query("DELETE from sessions WHERE tStamp<" . $cutOff);
+
   $q = $GLOBALS['db']->query("SELECT did from pubKeys WHERE kid='" . $kid . "'");
   $r = $q->fetch_assoc();
   $q->close();
