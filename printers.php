@@ -21,7 +21,7 @@ include_once "db.php";
 
 // Sends HOBA headers, prints our HTML refresher, then exits
 function printRefresher(){
-  setcookie("HOBA_LOGIN", "attempt", time() + $GLOBALS['retryTimeout'], "/hoba/", $_SERVER['SERVER_NAME'], true, false);
+  setcookie("HOBA_LOGIN", "attempt", time() + $GLOBALS['retryTimeout'], "/", $_SERVER['SERVER_NAME'], true, false);
 
   $chal = getChal(getPeer());
   header('WWW-Authenticate: HOBA: challenge=' . $chal . ",expires=" . $GLOBALS['chalTimeout']);

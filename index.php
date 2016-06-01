@@ -24,7 +24,7 @@ include_once 'printers.php';
 
 if(isset($_COOKIE['HOBA_LOGIN'])){
   if($_COOKIE['HOBA_LOGIN'] == "failed"){
-    dump("Got cookie login failed");
+    dump("HOBA: Got cookie login failed");
     printLoginFailure();
     exit(1);
   }
@@ -34,7 +34,7 @@ dbLogin();
 
 // Test for cookies
 if(isset($_COOKIE['HOBA'])){
-  dump("Got cookie for " . $_COOKIE['HOBA']);
+  dump("HOBA: Got cookie for " . $_COOKIE['HOBA']);
   
   $err = true;
   $dev = dbGetDeviceByCookie($_COOKIE['HOBA']);
@@ -63,17 +63,19 @@ if(isset($_COOKIE['HOBA'])){
     printFooter();
     
   }else{
+    dump("HOBA: No session found");
     printRefresher();
   }
 }else{
   if(isset($_COOKIE['HOBA_LOGIN'])){
     if($_COOKIE['HOBA_LOGIN'] == "attempt"){
-      dump("Got cookie login attempt");
+      dump("HOBA: Got cookie login attempt");
       printLoginFailure();
       dbLogout();
       exit(1);
     }
   }
+  dump("HOBA: No cookie HOBA set");
   printRefresher();
 }
 dbLogout();
