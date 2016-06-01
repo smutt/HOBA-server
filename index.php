@@ -36,6 +36,7 @@ dbLogin();
 if(isset($_COOKIE['HOBA'])){
   dump("Got cookie for " . $_COOKIE['HOBA']);
   
+  $err = true;
   $dev = dbGetDeviceByCookie($_COOKIE['HOBA']);
   if($dev){
     if(isset($_POST['uName'])){
@@ -67,6 +68,7 @@ if(isset($_COOKIE['HOBA'])){
 }else{
   if(isset($_COOKIE['HOBA_LOGIN'])){
     if($_COOKIE['HOBA_LOGIN'] == "attempt"){
+      dump("Got cookie login attempt");
       printLoginFailure();
       dbLogout();
       exit(1);
