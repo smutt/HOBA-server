@@ -5,9 +5,10 @@ Licensed under GPLv3
 
 This has been developed/tested with Apache2.4 on OpenBSD and FreeBSD
 
-# Some Apache2.4 config that might help you get started
+### Some Apache2.4 config that might help you get started
 The directory foo/hoba-ssl/.well-known/hoba contains symbolic links to the actual PHP scripts in foo/hoba-ssl/
 
+```
 <Directory foo/hoba-ssl>
   Options FollowSymlinks
   AllowOverride all
@@ -25,4 +26,4 @@ The directory foo/hoba-ssl/.well-known/hoba contains symbolic links to the actua
   Options FollowSymLinks
   SetHandler php7-script 
 </Directory>
-
+```
