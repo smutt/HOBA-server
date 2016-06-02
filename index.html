@@ -1,11 +1,59 @@
+<?php
+/*
+  The file is part of the HOBA server.
+  
+  HOBA server is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+  
+  HOBA server is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program. If not, see <http://www.gnu.org/licenses/>.
+  Copyright (C) 2016, Andrew McConachie, <andrew@depht.com>
+*/
+
+include_once "printers.php";
+sendChallenge();
+?>
+
 <html>
 <head>
-  <meta http-equiv="refresh" content="1;URL=index.php"/>
-  <title>
-    Redirecting...
-  </title>
+<script type="text/javascript" src="jquery-1.12.4.min.js"></script>
+<script type="text/javascript" src="login_poll.js"/></script>
+<link rel="stylesheet" type="text/css" href="hoba.css"/>
+<title>
+Ye Olde Password Authentication
+</title>
 </head>
-<body>
-  If you are not redirected please click <a href="index.php">here</a>.
+
+<body onload="pollLogin()">
+
+<center>
+<div class='ye'>Ye Olde Password Authentication</div>
+<div class="login">
+<table>
+  <form action="main.php" method="POST">
+  <tr>
+    <td>Username</td>
+    <td><input type="text" name="uName"></td>
+    <td rowspan="2" class="login_button"><input type="submit" name="changeUser" value="Login"></td>
+  </tr>
+  <tr>
+    <td>Password</td>
+    <td><input type="text" name="uPassword"></td>
+  </tr>
+  <input type="hidden" name="auth_type" value="ye_olde">
+  </form>
+</table>
+</div>
+</center>
+
+<div class='debug'></div>
+
 </body>
 </html>

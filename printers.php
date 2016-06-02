@@ -17,16 +17,23 @@
   Copyright (C) 2016, Andrew McConachie, <andrew@depht.com>
 */
 
+include_once "globals.php";
 include_once "db.php";
+include_once "crypto.php";
 
-// Sends HOBA headers, prints our HTML refresher, then exits
-function printRefresher(){
+// Sets cookie and sends challenge headers
+function sendChallenge(){
   setcookie("HOBA_LOGIN", "attempt", time() + $GLOBALS['retryTimeout'], "/", $_SERVER['SERVER_NAME'], true, false);
 
   $chal = getChal(getPeer());
   header('WWW-Authenticate: HOBA: challenge=' . $chal . ",expires=" . $GLOBALS['chalTimeout']);
   header('HTTP/1.0 401 Unauthorized');
+}
 
+// Sends HOBA headers, prints our HTML refresher, then exits
+function printRefresher(){
+  sendChallenge(); // Sends challenge
+  
   print "\n<html>";
   print "\n<head>";
   print "\n  <meta http-equiv=\"refresh\" content=\"3;URL=index.php\"/>";
@@ -65,19 +72,19 @@ function printMeat($did, $errStr){
 
   // Our top table
   print "\n<div align='center'><table width='100%'>";
-  print "\n<tr><td align='left'><a href='index.php'><img src='hoba-stamp.jpg' height='150' width='200'></a></td>";
-
+  print "\n<tr><td align='left' valign='top' rowspan='3'><a href='main.php'><img src='hoba-stamp.jpg' height='150' width='200'></a></td>";
+  
   if(strlen($errStr) != 0){
     print "\n<td class='err'>Error: " . $errStr . "</td>";
   }else{
     $attempt = dbGetBondAttempt($dev['uid']);
     if($attempt !== false){  // Print out Bond confirm form
-      print "\n<td class='err'><form action='index.php' method='POST'>";
+      print "\n<td class='err'><form action='main.php' method='POST'>";
       print "\n<input type='hidden' name='bondConfirmSource' value='" . $attempt['did'] . "'>";
       print "\n<input type='hidden' name='bondMe' value='true'>";
       print "\n<input type='submit' name='bondConfirm' value='Device " . $attempt['dName'] . " belongs to you'></form>";
 
-      print "\n<form action='index.php' method='POST'>";
+      print "\n<form action='main.php' method='POST'>";
       print "\n<input type='hidden' name='bondConfirmSource' value='" . $attempt['did'] . "'>";
       print "\n<input type='hidden' name='bondMe' value='false'>";
       print "\n<input type='submit' name='bondConfirm' value='Device " . $attempt['dName'] . " does NOT belong to you'></form>";
@@ -87,9 +94,11 @@ function printMeat($did, $errStr){
     }
   }
 
-  print "<td class='user'><h4>" . $dev['uName'] . "</h4><br/>";
-  print "\n<form action='index.php' method='POST'><input type='text' name='uName'><br/>\n
+  print "\n<td></td><td class='user'><h4>" . $dev['uName'] . "</h4></td></tr>";
+  print "\n<tr><td></td><td></td><td class='user'><form action='main.php' method='POST'><input type='text' name='uName'><br/>
              <input type='submit' name='changeUser' value='Change User Name'></form></td></tr>";
+  print "\n<tr><td></td><td></td><td class='user'><form action='main.php' method='POST'><input type='text' name='uPass'><br/>
+             <input type='submit' name='changePass' value='Change Password'></form></td></tr>";
   print "\n</table></div>";
  
   // Our big message table
@@ -106,14 +115,14 @@ function printMeat($did, $errStr){
     print "\n<td class='large'>" . $message . "</td>";
     print "\n<td>" . $msgs[$ii]['uName'] . "</td>";
     if($dev['uid'] != $msgs[$ii]['uid']){
-      print "\n<td><form action='index.php' method='POST'><input type='hidden' name='bondAttemptTarget' value='" . $msgs[$ii]['uid'] . "'>";
+      print "\n<td><form action='main.php' method='POST'><input type='hidden' name='bondAttemptTarget' value='" . $msgs[$ii]['uid'] . "'>";
       print "\n<input type='submit' name='bondAttempt' value=\"This is me\"/></form></td>";
     }
     print "\n</tr>";
   }
 
   print "\n<tr></tr>";
-  print "\n<tr><td class='small'><h4>Say Something</h4></td><td class='large'><form id='leaveMsg' method='POST' action='index.php'>\n
+  print "\n<tr><td class='small'><h4>Say Something</h4></td><td class='large'><form id='leaveMsg' method='POST' action='main.php'>\n
              <textarea form='leaveMsg' name='msg' maxlength='1000' onfocus=\"this.value='';\" required>Something...</textarea></td>";
   print "\n<td class='small'><input type='submit' name='msgButton' value='Post Message'></td></form></tr>";
   
@@ -124,7 +133,7 @@ function printMeat($did, $errStr){
 // What users see if they fail to login
 function printLoginFailure(){
   printHeader();
-  print "\nHOBA Login Failed: Your browser does not support HOBA or something else broke";
+  print "\nHOBA Login Failed: Something broke!!";
   printFooter();
 }
 ?>

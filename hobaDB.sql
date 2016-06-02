@@ -19,6 +19,7 @@
 CREATE TABLE `users` (
   `uid` int(11) NOT NULL AUTO_INCREMENT,
   `uName` text,
+  `pw` varchar(255),
   UNIQUE KEY `uid` (`uid`)
 );
 

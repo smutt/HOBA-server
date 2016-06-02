@@ -23,6 +23,8 @@
  */
 
 include_once 'globals.php';
+include_once 'crypto.php';
+
 
 // @brief login to our DB, sets our db object
 // @return False on failure
@@ -235,8 +237,8 @@ function dbGetMsgs($num){
 function dbSetUserName($uid, $str){
   $str = trim($str);
 
-  if(preg_replace("/^[A-Z,a-z,0-9,-_]+$/", "", $str) !== ""){
-    return "Username can only contain characters A-Z a-z 0-9 _ +";
+  if(preg_replace("/^[A-Z,a-z,0-9,\-,_]+$/", "", $str) !== ""){
+    return "Username may only contain characters A-Z a-z 0-9 _ -";
   }
   if(strlen($str) >= $GLOBALS['userNameMaxLen'] || strlen($str) <= $GLOBALS['userNameMinLen']){
     return "Username must be between " . $GLOBALS['userNameMinLen'] . " and " .$GLOBALS['userNameMaxLen'] . " characters";
@@ -245,6 +247,25 @@ function dbSetUserName($uid, $str){
   $q = $GLOBALS['db']->query("UPDATE users set uName='" . $str . "' where uid=" . $uid);
   return true;
 }
+
+// @brief takes new user Password
+// @return true on success, otherwise string explaining failure
+function dbSetUserPass($uid, $str){
+  $str = trim($str);
+
+  if(preg_replace("/^[A-Z,a-z,0-9,!,@,#,$,%,^,&,*,(,),_,\-,+,=]+$/", "", $str) !== ""){
+    return "Password may only contain characters A-Z a-z 0-9 ! @ # $ % ^ & * ( ) _- + = ";
+  }
+  if(strlen($str) >= $GLOBALS['userNameMaxLen'] || strlen($str) <= $GLOBALS['userNameMinLen']){
+    return "Password must be between " . $GLOBALS['userPassMinLen'] . " and " .$GLOBALS['userPassMaxLen'] . " characters";
+  }
+
+  $hash = password_hash($str, PASSWORD_DEFAULT);
+  
+  $q = $GLOBALS['db']->query("UPDATE users set pw='" . $hash . "' where uid=" . $uid);
+  return true;
+}
+
 
 // @brief Adds a message to the messages table, takes uid and msg
 // @return true on success, otherwise string explaining failure
