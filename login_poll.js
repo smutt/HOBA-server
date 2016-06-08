@@ -16,16 +16,20 @@
   Copyright (C) 2016, Andrew McConachie, <andrew@depht.com>
 */
 
+var gDelay = 1000;
+
 function pollLogin(){
+  gDelay = Math.min(gDelay*2, 1800000); // 30 min is plenty long
   $.ajax({
     url: "login_status.php",
     dataType: "text",
     success: function(res){
-      //$("div.debug").html(result);
+      //$("div.debug").html(res);
+      //$("div.debug").html(gDelay);
       if(res.trim() == "1"){
 	window.location.assign("https://hoba.name/main.php");
       }else{
-	setTimeout(pollLogin(), 3000);
+	window.setTimeout(pollLogin, gDelay);
       }
     }
   });

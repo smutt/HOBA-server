@@ -266,6 +266,22 @@ function dbSetUserPass($uid, $str){
   return true;
 }
 
+// @brief Takes password string and compares it to DB hash
+// @return true on success, otherwise false
+function dbCheckUserPass($uid, $str){
+  $str = trim($str);
+
+  $q = $GLOBALS['db']->query("SELECT pw from users where uid=" . $uid);
+  if($q === false){
+    return false; // uid not found, should never happen
+  }
+  $user = $q->fetch_assoc();
+  if($user['pw'] == password_hash($str, PASSWORD_DEFAULT)){
+    return true;
+  }else{
+    return false;
+  }
+}
 
 // @brief Adds a message to the messages table, takes uid and msg
 // @return true on success, otherwise string explaining failure
