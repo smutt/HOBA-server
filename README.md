@@ -14,7 +14,7 @@ The directory foo/hoba-ssl/.well-known/hoba contains symbolic links to the actua
   AllowOverride all
   Order allow,deny
   Allow from all
-  AddHandler php7-script .php
+  SetHandler php7-script 
 
   # Allow Authorization header to be modified
   RewriteEngine On
