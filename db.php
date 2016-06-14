@@ -103,21 +103,38 @@ function dbRegisterKey($kid, $pubKey, $dName){
   return True;
 }
 
-// @brief Adds new cookie value to a did, which is basically a session
+// @brief Delete really old sessions, Otherwise they never get deleted
 // @return nothing
-function dbAddSession($kid, $dName, $cookieVal, $t){
-  $dName = trim($GLOBALS['db']->real_escape_string($dName));
-  $cookieVal = trim($cookieVal);
-
-  // Delete really old sessions, Otherwise they never get deleted
+function dbKillOldSessions(){
   $cutOff = time() - $GLOBALS['sessionTimeout'] * 10;
   $GLOBALS['db']->query("DELETE from sessions WHERE tStamp<" . $cutOff);
+}
 
+// @brief Adds new cookie value to a did, which is basically a session
+// @return nothing
+function dbAddDeviceSession($kid, $dName, $cookieVal, $t){
+  $dName = trim($GLOBALS['db']->real_escape_string($dName));
+  $cookieVal = trim($GLOBALS['db']->real_escape_string($cookieVal));
+
+  dbKillOldSessions();
+    
   $q = $GLOBALS['db']->query("SELECT did from pubKeys WHERE kid='" . $kid . "'");
   $r = $q->fetch_assoc();
   $q->close();
-        
+  
   $q = $GLOBALS['db']->prepare("INSERT into sessions(did, cookie, tStamp) values(" . $r['did'] . ", '" . $cookieVal . "', " . $t . ")");
+  $q->execute();
+  $q->close();
+}
+
+// @brief Adds an entry to the sessions table, sets uid not did, used strictly for Ye Olde Auth
+// @return nothing
+function dbAddUserSession($uid, $cookieVal, $t){
+  $cookieVal = trim($GLOBALS['db']->real_escape_string($cookieVal));
+
+  dbKillOldSessions();
+
+  $q = $GLOBALS['db']->prepare("INSERT into sessions(uid, cookie, tStamp) values(" . $uid . ", '" . $cookieVal . "', " . $t . ")");
   $q->execute();
   $q->close();
 }
@@ -155,9 +172,7 @@ function dbGetDeviceByDid($did){
 // @brief Takes a cookie value
 // @return device array if cookie value is valid and not expired, false otherwise
 function dbGetDeviceByCookie($cookieVal){
-  $cookieVal = trim($cookieVal);
-  if(strtolower($cookieVal) == "failed" || strtolower($cookieVal) == "attempt" ) return False; // Defensive programming
-
+  $cookieVal = trim($GLOBALS['db']->real_escape_string($cookieVal));
   $tStamp = time();
   
   $q = $GLOBALS['db']->query("SELECT did,tStamp from sessions where cookie='" . $cookieVal . "'");
@@ -196,7 +211,6 @@ function dbGetDeviceByKid($kid){
 
 // @brief Takes nothing
 // @return a random name from our table of names
-// TODO: Check if username is already in use
 function dbRandName(){
   $q = $GLOBALS['db']->query("SELECT firstName from firstNames ORDER BY RAND() LIMIT 0,1");
   $r = $q->fetch_assoc();
@@ -244,8 +258,35 @@ function dbSetUserName($uid, $str){
     return "Username must be between " . $GLOBALS['userNameMinLen'] . " and " .$GLOBALS['userNameMaxLen'] . " characters";
   }
 
+  $q = $GLOBALS['db']->query("SELECT uid from users where uName='" . $str . "'");
+  if($q->num_rows != 0){
+    return "Username already in use";
+  }
+  
   $q = $GLOBALS['db']->query("UPDATE users set uName='" . $str . "' where uid=" . $uid);
   return true;
+}
+
+// @brief takes cookie value
+// @return user info as assoc array
+function dbGetUserByCookie($cookieVal){
+  $cookieVal = trim($GLOBALS['db']->real_escape_string($cookieVal));
+  $tStamp = time();
+  
+  $q = $GLOBALS['db']->query("SELECT uid,tStamp from sessions where cookie='" . $cookieVal . "'");
+  if($q){
+    $r = $q->fetch_assoc();
+    $q->close();
+    if($tStamp > $r['tStamp'] + $GLOBALS['sessionTimeout']){
+      dump("Cookie timed out");
+      return False;
+    }else{
+      $q = $GLOBALS['db']->query("SELECT uid,uName from users where uid='" . $r['uid'] . "'");
+      return $q->fetch_assoc();
+    }
+  }else{
+    return False;
+  }
 }
 
 // @brief takes new user Password
@@ -267,18 +308,20 @@ function dbSetUserPass($uid, $str){
 }
 
 // @brief Takes password string and compares it to DB hash
-// @return true on success, otherwise false
-function dbCheckUserPass($uid, $str){
-  $str = trim($str);
+// @return uid on success, otherwise false
+function dbCheckUserPass($uName, $pWord){
+  $uName = trim($GLOBALS['db']->real_escape_string($uName));
+  $pWord = trim($GLOBALS['db']->real_escape_string($pWord));
 
-  $q = $GLOBALS['db']->query("SELECT pw from users where uid=" . $uid);
+  $q = $GLOBALS['db']->query("SELECT uid,pw from users where uName='" . $uName . "'");
   if($q === false){
-    return false; // uid not found, should never happen
+    return false;
   }
   $user = $q->fetch_assoc();
-  if($user['pw'] == password_hash($str, PASSWORD_DEFAULT)){
-    return true;
+  if(password_verify($pWord, $user['pw'])){
+    return $user['uid'];
   }else{
+    dump("HOBA: YeOlde Bad Username/Password");
     return false;
   }
 }

@@ -65,11 +65,18 @@ function printFooter(){
   print "\n</html>";
 }
 
-// Takes msgs as assoc array and an error string
-function printMeat($did, $errStr){
-  $dev = dbGetDeviceByDid($did);
-  $msgs = dbGetMsgs($GLOBALS['numMsgs']);
+// Takes uid, did, and an error string
+// Either uName or did MUST be valid, while the other MUST be set to false
+function printMeat($uName, $did, $errStr){
+  if($uName === false){
+    $dev = dbGetDeviceByDid($did);
+    $uName = $dev['uName'];
+  }else{
+    $dev = false;
+  }
 
+  $msgs = dbGetMsgs($GLOBALS['numMsgs']);
+  
   // Our top table
   print "\n<div align='center'><table width='100%'>";
   print "\n<tr><td align='left' valign='top' rowspan='3'><a href='main.php'><img src='hoba-stamp.jpg' height='150' width='200'></a></td>";
@@ -77,26 +84,36 @@ function printMeat($did, $errStr){
   if(strlen($errStr) != 0){
     print "\n<td class='err'>Error: " . $errStr . "</td>";
   }else{
-    $attempt = dbGetBondAttempt($dev['uid']);
-    if($attempt !== false){  // Print out Bond confirm form
-      print "\n<td class='err'><form action='main.php' method='POST'>";
-      print "\n<input type='hidden' name='bondConfirmSource' value='" . $attempt['did'] . "'>";
-      print "\n<input type='hidden' name='bondMe' value='true'>";
-      print "\n<input type='submit' name='bondConfirm' value='Device " . $attempt['dName'] . " belongs to you'></form>";
-
-      print "\n<form action='main.php' method='POST'>";
-      print "\n<input type='hidden' name='bondConfirmSource' value='" . $attempt['did'] . "'>";
-      print "\n<input type='hidden' name='bondMe' value='false'>";
-      print "\n<input type='submit' name='bondConfirm' value='Device " . $attempt['dName'] . " does NOT belong to you'></form>";
-      print "\n</td>";
+    if($dev){
+      $attempt = dbGetBondAttempt($dev['uid']);
+      if($attempt !== false){  // Print out Bond confirm form
+        print "\n<td class='err'><form action='main.php' method='POST'>";
+        print "\n<input type='hidden' name='bondConfirmSource' value='" . $attempt['did'] . "'>";
+        print "\n<input type='hidden' name='bondMe' value='true'>";
+        print "\n<input type='submit' name='bondConfirm' value='Device " . $attempt['dName'] . " belongs to you'></form>";
+        
+        print "\n<form action='main.php' method='POST'>";
+        print "\n<input type='hidden' name='bondConfirmSource' value='" . $attempt['did'] . "'>";
+        print "\n<input type='hidden' name='bondMe' value='false'>";
+        print "\n<input type='submit' name='bondConfirm' value='Device " . $attempt['dName'] . " does NOT belong to you'></form>";
+        print "\n</td>";
+      }else{
+        print "\n<td class='err'></td>";
+      }
     }else{
       print "\n<td class='err'></td>";
     }
   }
 
-  print "\n<td></td><td class='user'><h4>" . $dev['uName'] . "</h4></td></tr>";
-  print "\n<tr><td></td><td></td><td class='user'><form action='main.php' method='POST'><input type='text' name='uName'><br/>
+  print "\n<td></td><td class='user'><h4>" . $uName . "</h4></td></tr>";
+
+  if($dev){
+    print "\n<tr><td></td><td></td><td class='user'><form action='main.php' method='POST'><input type='text' name='uName'><br/>
              <input type='submit' name='changeUser' value='Change User Name'></form></td></tr>";
+  }else{
+    print "\n<tr><td></td><td></td><td class='user'><br/></td></tr>";
+  }
+
   print "\n<tr><td></td><td></td><td class='user'><form action='main.php' method='POST'><input type='text' name='uPass'><br/>
              <input type='submit' name='changePass' value='Change Password'></form></td></tr>";
   print "\n</table></div>";
@@ -114,7 +131,7 @@ function printMeat($did, $errStr){
     print "\n<tr><td></td>";
     print "\n<td class='large'>" . $message . "</td>";
     print "\n<td>" . $msgs[$ii]['uName'] . "</td>";
-    if($dev['uid'] != $msgs[$ii]['uid']){
+    if($dev && ($dev['uid'] != $msgs[$ii]['uid'])){
       print "\n<td><form action='main.php' method='POST'><input type='hidden' name='bondAttemptTarget' value='" . $msgs[$ii]['uid'] . "'>";
       print "\n<input type='submit' name='bondAttempt' value=\"This is me\"/></form></td>";
     }

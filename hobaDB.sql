@@ -40,7 +40,8 @@ CREATE TABLE `pubKeys` (
 
 CREATE TABLE `sessions` (
   `sid` int(11) NOT NULL AUTO_INCREMENT,
-  `did` int(11) NOT NULL,
+  `did` int(11) NULL,
+  `uid` int(11) NULL,
   `cookie` text NOT NULL,
   `tStamp` int unsigned NOT NULL,
   UNIQUE KEY `sid` (`sid`)

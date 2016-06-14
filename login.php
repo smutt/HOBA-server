@@ -66,7 +66,7 @@ if($verified){
 
   $t = time() + $GLOBALS['sessionTimeout'];
   $chocolate = getCookieVal($user['kid'], $user['did']);
-  dbAddSession($user['kid'], $user['did'], $chocolate, $t);
+  dbAddDeviceSession($user['kid'], $user['did'], $chocolate, $t);
   setSuccessCookie($chocolate, $t);
   header("Hobareg: regok", true, 200);
   dump("HOBA: Login Successful");

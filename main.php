@@ -34,7 +34,7 @@ dbLogin();
 
 // Test for cookies
 if(isset($_COOKIE['HOBA'])){
-  dump("HOBA: Got cookie for " . $_COOKIE['HOBA']);
+  dump("HOBA: Got HOBA cookie for " . $_COOKIE['HOBA']);
   
   $err = true;
   $dev = dbGetDeviceByCookie($_COOKIE['HOBA']);
@@ -60,19 +60,72 @@ if(isset($_COOKIE['HOBA'])){
     printHeader();
     if($err !== true){
       dump($err);
-      printMeat($dev['did'], $err);
+      printMeat(false, $dev['did'], $err);
     }else{
-      printMeat($dev['did'], "");
+      printMeat(false, $dev['did'], "");
     }
     printFooter();
     
   }else{
-    dump("HOBA: No session found");
+    dump("HOBA: No HOBA session found");
     printLoginFailure();
   }
+
+}elseif(isset($_COOKIE['YEOLDE'])){
+  dump("HOBA: Got YEOLDE cookie for " . $_COOKIE['YEOLDE']);
+  
+  $err = true;
+  $user = dbGetUserByCookie($_COOKIE['YEOLDE']);
+  if($user){
+    //TODO: Refresh session if it's old
+    
+    if(isset($_POST['uPass'])){
+      $err = dbSetUserPass($user['uid'], $_POST['uPass']);
+    }elseif(isset($_POST['msg'])){
+      $err = dbAddMsg($user['uid'], $_POST['msg']);
+    }
+    
+    printHeader();
+    if($err !== true){
+      dump($err);
+      printMeat($user['uName'], false, $err);
+    }else{
+      printMeat($user['uName'], false, "");
+    }
+    printFooter();
+    
+  }else{
+    dump("HOBA: No YEOLDE session found");
+    printLoginFailure();
+  }
+  
 }else{
-  dump("HOBA: No cookie HOBA set");
-  printLoginFailure();
+  dump("HOBA: No cookie set");
+  if(isset($_POST['YeOldeLogin'])){ // Handle traditional logins
+    dump("HOBA: Initiating YeOlde Login");
+    if(isset($_POST['YeOldeUser']) && isset($_POST['YeOldePassword'])){
+      $uid = dbCheckUserPass($_POST['YeOldeUser'], $_POST['YeOldePassword']);
+      dump("HOBA uid:" . $uid);
+      if(! $uid === false){
+        $t = time() + $GLOBALS['sessionTimeout'];
+        $chocolate = getCookieVal($uid, $uid);
+        dbAddUserSession($uid, $chocolate, $t);
+        setUserCookie($chocolate, $t);
+        dump("HOBA: YeOlde Login Successful");
+
+        printHeader();
+        printMeat($uid, false, "");
+        printFooter();
+
+      }else{
+        printLoginFailure();
+      }
+    }else{
+      printLoginFailure();
+    }
+  }else{
+    printLoginFailure();
+  }
 }
 dbLogout();
 ?>
