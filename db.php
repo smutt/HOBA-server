@@ -151,11 +151,13 @@ function dbGetDeviceByDid($did){
   $rv['dName'] = $r['dName'];
   $q->close();
   
-  $q = $GLOBALS['db']->query("SELECT uName from users where uid=" . $rv['uid']);
+  $q = $GLOBALS['db']->query("SELECT uName,pw from users where uid=" . $rv['uid']);
   $r = $q->fetch_assoc();
   if(strlen(trim($r['uName'])) > 0) $rv['uName'] = $r['uName'];
+  if(strlen(trim($r['pw'])) > 0) $rv['pw'] = $r['pw'];
   else{
     $rv['uName'] = false;
+    $rv['pw'] = false;
   }
   $q->close();
 
