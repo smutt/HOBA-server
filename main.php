@@ -22,14 +22,6 @@ include_once 'db.php';
 include_once 'crypto.php';
 include_once 'printers.php';
 
-if(isset($_COOKIE['HOBA_LOGIN'])){
-  if($_COOKIE['HOBA_LOGIN'] == "failed"){
-    dump("HOBA: Got cookie login failed");
-    printLoginFailure();
-    exit(1);
-  }
-}
-
 dbLogin();
 
 // Test for cookies
@@ -84,7 +76,7 @@ if(isset($_COOKIE['HOBA'])){
     }elseif(isset($_POST['msg'])){
       $err = dbAddMsg($user['uid'], $_POST['msg']);
     }
-    
+
     printHeader();
     if($err !== true){
       dump($err);
@@ -105,7 +97,6 @@ if(isset($_COOKIE['HOBA'])){
     dump("HOBA: Initiating YeOlde Login");
     if(isset($_POST['YeOldeUser']) && isset($_POST['YeOldePassword'])){
       $uid = dbCheckUserPass($_POST['YeOldeUser'], $_POST['YeOldePassword']);
-      dump("HOBA uid:" . $uid);
       if(! $uid === false){
         $t = time() + $GLOBALS['sessionTimeout'];
         $chocolate = getCookieVal($uid, $uid);
@@ -113,8 +104,9 @@ if(isset($_COOKIE['HOBA'])){
         setUserCookie($chocolate, $t);
         dump("HOBA: YeOlde Login Successful");
 
+        $user = dbGetUserByCookie($chocolate);
         printHeader();
-        printMeat($uid, false, "");
+        printMeat($user['uName'], false, "");
         printFooter();
 
       }else{

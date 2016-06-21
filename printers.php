@@ -23,8 +23,6 @@ include_once "crypto.php";
 
 // Sets cookie and sends challenge headers
 function sendChallenge(){
-  setcookie("HOBA_LOGIN", "attempt", time() + $GLOBALS['retryTimeout'], "/", $_SERVER['SERVER_NAME'], true, false);
-
   $chal = getChal(getPeer());
   header('WWW-Authenticate: HOBA: challenge=' . $chal . ",expires=" . $GLOBALS['chalTimeout']);
   header('HTTP/1.0 401 Unauthorized');

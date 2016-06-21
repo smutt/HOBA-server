@@ -50,15 +50,9 @@ function dump($str){
   }
 }
 
-// Sets HOBA login failure cookie so we don't retry login infinitely
-function setFailCookie(){
-  setcookie("HOBA_LOGIN", "failed", time() + $GLOBALS['retryTimeout'], "/", $_SERVER['SERVER_NAME'], true, false);
-}
-
 // Sets HOBA login success cookie
 function setSuccessCookie($val, $t){
   setcookie("HOBA", $val, $t, "/", $_SERVER['SERVER_NAME'], true, false);
-  setcookie("HOBA_LOGIN", "success", time() + $GLOBALS['retryTimeout'], "/", $_SERVER['SERVER_NAME'], true, false);
 }
 
 // Sets Ye Olde Login Cookie
