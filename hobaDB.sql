@@ -44,7 +44,7 @@ CREATE TABLE `sessions` (
   `uid` int(11) NULL,
   `cookie` text NOT NULL,
   `tStamp` int unsigned NOT NULL,
-  `passed` bit NULL,
+  `passed` bool NOT NULL DEFAULT FALSE,
   UNIQUE KEY `sid` (`sid`)
 );
 
