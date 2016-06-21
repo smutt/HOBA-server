@@ -110,6 +110,29 @@ function dbKillOldSessions(){
   $GLOBALS['db']->query("DELETE from sessions WHERE tStamp<" . $cutOff);
 }
 
+// @brief Modifies a session based on values passed, passed values set to false are ignored, $cookieVal cannot be false
+// @returns nothing
+function dbModSession($cookieVal, $did, $uid, $tStamp, $passed){
+  $cookieVal = trim($GLOBALS['db']->real_escape_string($cookieVal));
+  
+  if($did !== false){
+    $GLOBALS['db']->query("UPDATE sessions set did=" . $did . " WHERE cookie='" . $cookieVal . "'");
+  }
+
+  if($uid !== false){
+    $GLOBALS['db']->query("UPDATE sessions set uid=" . $uid . " WHERE cookie='" . $cookieVal . "'");
+  }
+
+  if($tStamp !== false){
+    $GLOBALS['db']->query("UPDATE sessions set tStamp=" . $tStamp . " WHERE cookie='" . $cookieVal . "'");
+  }
+
+  if($passed !== false){
+    dump("Setting passed to " . $passed);
+    $GLOBALS['db']->query("UPDATE sessions set passed=" . $passed . " WHERE cookie='" . $cookieVal . "'");
+  }
+}
+
 // @brief Adds new cookie value to a did, which is basically a session
 // @return nothing
 function dbAddDeviceSession($kid, $dName, $cookieVal, $t){
@@ -154,9 +177,11 @@ function dbGetDeviceByDid($did){
   $q = $GLOBALS['db']->query("SELECT uName,pw from users where uid=" . $rv['uid']);
   $r = $q->fetch_assoc();
   if(strlen(trim($r['uName'])) > 0) $rv['uName'] = $r['uName'];
-  if(strlen(trim($r['pw'])) > 0) $rv['pw'] = $r['pw'];
   else{
     $rv['uName'] = false;
+  }
+  if(strlen(trim($r['pw'])) > 0) $rv['pw'] = $r['pw'];
+  else{
     $rv['pw'] = false;
   }
   $q->close();
@@ -167,7 +192,7 @@ function dbGetDeviceByDid($did){
   $rv['pid'] = $r['pid'];
   $rv['kid'] = $r['kid'];  
   $rv['pubKey'] = json_decode(base64url_decode($r['pubKey']), true);
-  
+
   return $rv;
 }
 
@@ -182,13 +207,23 @@ function dbGetDeviceByCookie($cookieVal){
     $r = $q->fetch_assoc();
     $q->close();
     if($tStamp > $r['tStamp'] + $GLOBALS['sessionTimeout']){
-      dump("Cookie timed out");
+      dump("HOBA: Cookie timed out");
       return False;
     }else{
-      return dbGetDeviceByDid($r['did']);
+      $rv = dbGetDeviceByDid($r['did']);
+
+      $q = $GLOBALS['db']->query("SELECT passed from sessions where cookie='" . $cookieVal . "'");
+      $r = $q->fetch_assoc();
+      $q->close();
+      if($r['passed'] == 1){
+        $rv['passed'] = true;
+      }else{
+        $rv['passed'] = false;
+      }
+      return $rv;
     }
   }else{
-    return False;
+    return false;
   }
 }
 
@@ -310,8 +345,9 @@ function dbSetUserPass($uid, $str){
 }
 
 // @brief Takes password string and compares it to DB hash
+// @brief Also checks to make sure uid maps to did
 // @return uid on success, otherwise false
-function dbCheckUserPass($uName, $pWord){
+function dbCheckUserPass($uName, $pWord, $did=false){
   $uName = trim($GLOBALS['db']->real_escape_string($uName));
   $pWord = trim($GLOBALS['db']->real_escape_string($pWord));
 
@@ -321,7 +357,26 @@ function dbCheckUserPass($uName, $pWord){
   }
   $user = $q->fetch_assoc();
   if(password_verify($pWord, $user['pw'])){
+    if($did){
+      $q = $GLOBALS['db']->query("SELECT uid from devices where did='" . $did . "'");
+      if($q === false){
+        dump("HOBA: No device for YeOlde Login");
+        return false;
+      }
+      $dev = $q->fetch_assoc();
+      if($user['uid'] != $dev['uid']){
+        dump("HOBA: Wrong device for YeOlde Login");
+        return false;
+      }
+    }else{
+      $q = $GLOBALS['db']->query("SELECT did from devices where uid='" . $user['uid'] . "'");
+      if($q->num_rows != 0){
+        dump("HOBA: Simple YeOlde Login for HOBA device not allowed");
+        return false;
+      }
+    }
     return $user['uid'];
+
   }else{
     dump("HOBA: YeOlde Bad Username/Password");
     return false;

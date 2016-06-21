@@ -32,32 +32,51 @@ if(isset($_COOKIE['HOBA'])){
   $dev = dbGetDeviceByCookie($_COOKIE['HOBA']);
   if($dev){
     //TODO: Refresh session if it's old
-    
-    if(isset($_POST['uName'])){
-      $err = dbSetUserName($dev['uid'], $_POST['uName']);
-    }elseif(isset($_POST['uPass'])){
-      $err = dbSetUserPass($dev['uid'], $_POST['uPass']);
-    }elseif(isset($_POST['msg'])){
-      $err = dbAddMsg($dev['uid'], $_POST['msg']);
-    }elseif(isset($_POST['bondAttempt'])){
-      $err = dbRequestBond($dev['did'], $_POST['bondAttemptTarget']);
-    }elseif(isset($_POST['bondConfirm'])){
-      if($_POST['bondMe'] === "false"){
-        $err = dbDeleteBond($_POST['bondConfirmSource'], $dev['uid']);
-      }elseif($_POST['bondMe'] === "true"){
-        $err = dbConfirmBond($_POST['bondConfirmSource'], $dev['uid']);
+
+    if($dev['pw'] && !$dev['passed']){ // Handle HOBA+YeOlde
+      if(isset($_POST['HOBAYeOldeLogin']) && isset($_POST['HOBAYeOldeUser']) && isset($_POST['HOBAYeOldePassword'])){
+        dump("HOBA: Handling HOBA+YeOlde Login Creds");
+        $uid = dbCheckUserPass($_POST['HOBAYeOldeUser'], $_POST['HOBAYeOldePassword'], $dev['did']);
+        if(! $uid === false){
+          dbModSession($_COOKIE['HOBA'], false, false, false, 1);
+          printHeader();
+          printMeat(false, $dev['did'], "");
+          printFooter();
+        }else{
+          printLoginFailure("HOBA: Bad Username / Password");
+        }
+      }else{
+        dump("HOBA: Initiating HOBA+YeOlde Login");
+        printHOBAYeOldePrompt();
       }
-    }
-    
-    printHeader();
-    if($err !== true){
-      dump($err);
-      printMeat(false, $dev['did'], $err);
+
     }else{
-      printMeat(false, $dev['did'], "");
+      if(isset($_POST['uName'])){
+        $err = dbSetUserName($dev['uid'], $_POST['uName']);
+      }elseif(isset($_POST['uPass'])){
+        $err = dbSetUserPass($dev['uid'], $_POST['uPass']);
+      }elseif(isset($_POST['msg'])){
+        $err = dbAddMsg($dev['uid'], $_POST['msg']);
+      }elseif(isset($_POST['bondAttempt'])){
+        $err = dbRequestBond($dev['did'], $_POST['bondAttemptTarget']);
+      }elseif(isset($_POST['bondConfirm'])){
+        if($_POST['bondMe'] === "false"){
+          $err = dbDeleteBond($_POST['bondConfirmSource'], $dev['uid']);
+        }elseif($_POST['bondMe'] === "true"){
+          $err = dbConfirmBond($_POST['bondConfirmSource'], $dev['uid']);
+        }
+      }
+      
+      printHeader();
+      if($err !== true){
+        dump($err);
+        printMeat(false, $dev['did'], $err);
+      }else{
+        printMeat(false, $dev['did'], "");
+      }
+      printFooter();
     }
-    printFooter();
-    
+
   }else{
     dump("HOBA: No HOBA session found");
     printLoginFailure();
@@ -96,7 +115,7 @@ if(isset($_COOKIE['HOBA'])){
   if(isset($_POST['YeOldeLogin'])){ // Handle traditional logins
     dump("HOBA: Initiating YeOlde Login");
     if(isset($_POST['YeOldeUser']) && isset($_POST['YeOldePassword'])){
-      $uid = dbCheckUserPass($_POST['YeOldeUser'], $_POST['YeOldePassword']);
+      $uid = dbCheckUserPass($_POST['YeOldeUser'], $_POST['YeOldePassword'], false);
       if(! $uid === false){
         $t = time() + $GLOBALS['sessionTimeout'];
         $chocolate = getCookieVal($uid, $uid);
@@ -110,13 +129,11 @@ if(isset($_COOKIE['HOBA'])){
         printFooter();
 
       }else{
-        printLoginFailure();
+        printLoginFailure("YeOlde Bad Username/Password");
       }
     }else{
-      printLoginFailure();
+      printLoginFailure("YeOlde Missing Username/Password");
     }
-  }else{
-    printLoginFailure();
   }
 }
 dbLogout();

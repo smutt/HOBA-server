@@ -146,9 +146,52 @@ function printMeat($uName, $did, $errStr){
 }
 
 // What users see if they fail to login
-function printLoginFailure(){
+function printLoginFailure($str=""){
   printHeader();
-  print "\nHOBA Login Failed: Something broke!!";
+  if(strlen($str) > 0){
+    print "\n" . $str;
+  }else{
+    print "\nHOBA Login Failed: Session expired or something else broke.";
+  }
   printFooter();
 }
+
+// Prints out our YeOlde Login for HOBA users
+function printHOBAYeOldePrompt(){
+print <<<END
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="hoba.css"/>
+<title>
+HOBA Ye Olde Password Authentication
+</title>
+</head>
+
+<body onload="pollLogin()">
+
+<center>
+<div class='ye'>Ye Olde Password Authentication for HOBA Devices</div>
+<div class="login">
+<table>
+  <form action="main.php" method="POST">
+  <tr>
+    <td>Username</td>
+    <td><input type="text" name="HOBAYeOldeUser"></td>
+    <td rowspan="2" class="login_button"><input type="submit" name="HOBAYeOldeSubmit" value="Login"></td>
+  </tr>
+  <tr>
+    <td>Password</td>
+    <td><input type="text" name="HOBAYeOldePassword"></td>
+  </tr>
+  <input type="hidden" name="HOBAYeOldeLogin"/>
+  </form>
+</table>
+</div>
+</center>
+</body>
+</html>
+END;
+}
+
+
 ?>
