@@ -27,3 +27,7 @@ The directory foo/hoba-ssl/.well-known/hoba contains symbolic links to the actua
   SetHandler php7-script 
 </Directory>
 ```
+
+### Test Website
+There is a test website up and running to play with this @ https://hoba.name/
+
